@@ -8,6 +8,8 @@
 
 [English](README.md) | **Українська**
 
+![Screenshot](screenshot.png)
+
 ## Підтримувані телевізори
 
 - **Модель:** Philips 42PFL6158K/12 (та схожі серії 6xxx)

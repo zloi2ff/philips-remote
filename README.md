@@ -4,6 +4,8 @@ Web-based remote control for Philips Smart TV (JointSpace API v1).
 
 **English** | [Українська](README.uk.md)
 
+![Screenshot](screenshot.png)
+
 ![Remote](https://img.shields.io/badge/TV-Philips%206158-blue)
 ![Python](https://img.shields.io/badge/Python-3.x-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
