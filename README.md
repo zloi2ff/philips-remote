@@ -28,7 +28,7 @@ Web-based remote control for Philips Smart TV (JointSpace API v1).
 ### Quick Start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/philips-remote.git
+git clone https://github.com/zloi2ff/philips-remote.git
 cd philips-remote
 python3 server.py
 ```
