@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 
 TV_IP = "192.168.31.214"
 TV_PORT = 1925
-SERVER_PORT = 8080
+SERVER_PORT = 8888
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
