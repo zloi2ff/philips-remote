@@ -22,7 +22,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             min-height: 100vh;
             color: white;
         }
@@ -31,71 +31,63 @@
             max-width: 380px;
             margin: 0 auto;
             background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
-            border-radius: 40px;
-            padding: 30px 20px;
+            border-radius: 30px;
+            padding: 15px 15px 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 8px;
         }
 
         .header h1 {
-            font-size: 18px;
+            font-size: 16px;
             margin: 0;
             color: #a0a0a0;
         }
 
         .header .model {
-            font-size: 12px;
+            font-size: 11px;
             color: #666;
         }
 
         .status {
             text-align: center;
-            padding: 8px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 5px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-size: 11px;
         }
 
         .status.connected { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
         .status.error { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
 
         .section {
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-size: 11px;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            text-align: center;
+            margin-bottom: 12px;
         }
 
         .btn-row {
             display: flex;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .btn {
             background: linear-gradient(180deg, #3d3d5c 0%, #2d2d44 100%);
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             color: white;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 60px;
-            height: 50px;
-            padding: 10px 15px;
+            min-width: 55px;
+            height: 44px;
+            padding: 8px 12px;
         }
 
         .btn:active {
@@ -105,8 +97,8 @@
 
         .btn.power {
             background: linear-gradient(180deg, #c0392b 0%, #96281b 100%);
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
         }
 
@@ -114,24 +106,24 @@
             background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
         }
 
-        .btn.color-red { background: #e74c3c; min-width: 50px; }
-        .btn.color-green { background: #27ae60; min-width: 50px; }
-        .btn.color-yellow { background: #f1c40f; min-width: 50px; }
-        .btn.color-blue { background: #3498db; min-width: 50px; }
+        .btn.color-red { background: #e74c3c; min-width: 45px; }
+        .btn.color-green { background: #27ae60; min-width: 45px; }
+        .btn.color-yellow { background: #f1c40f; min-width: 45px; }
+        .btn.color-blue { background: #3498db; min-width: 45px; }
 
         .dpad {
             display: grid;
-            grid-template-columns: 70px 70px 70px;
-            grid-template-rows: 70px 70px 70px;
-            gap: 5px;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 4px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 12px 0;
         }
 
         .dpad .btn {
-            width: 70px;
-            height: 70px;
-            font-size: 24px;
+            width: 60px;
+            height: 60px;
+            font-size: 22px;
         }
 
         .dpad .btn.ok {
@@ -143,60 +135,36 @@
             background: transparent;
         }
 
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 70px);
-            gap: 10px;
-            justify-content: center;
-        }
-
-        .numpad .btn {
-            width: 70px;
-            height: 55px;
-            font-size: 20px;
-        }
-
         .volume-channel {
             display: flex;
             justify-content: space-around;
-            margin: 20px 0;
+            margin: 12px 0;
         }
 
         .vol-ch-group {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .vol-ch-group .label {
-            font-size: 10px;
+            font-size: 9px;
             color: #666;
             text-transform: uppercase;
         }
 
         .vol-ch-group .btn {
-            width: 60px;
-            height: 50px;
-            font-size: 20px;
-        }
-
-        .sources {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-        }
-
-        .sources .btn {
-            font-size: 11px;
-            height: 40px;
+            width: 55px;
+            height: 44px;
+            font-size: 18px;
         }
 
         .volume-slider {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 0 10px;
+            gap: 8px;
+            padding: 0 5px;
         }
 
         .volume-slider input {
@@ -210,17 +178,92 @@
 
         .volume-slider input::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             background: #3498db;
             border-radius: 50%;
             cursor: pointer;
         }
 
         .volume-value {
-            min-width: 30px;
+            min-width: 28px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
+        }
+
+        /* Collapsible section */
+        .expand-btn {
+            width: 100%;
+            background: linear-gradient(180deg, #3d3d5c 0%, #2d2d44 100%);
+            border: none;
+            border-radius: 10px;
+            color: #888;
+            font-size: 12px;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .expand-btn:active {
+            background: linear-gradient(180deg, #4d4d6c 0%, #3d3d5c 100%);
+        }
+
+        .expand-btn .arrow {
+            transition: transform 0.3s;
+        }
+
+        .expand-btn.expanded .arrow {
+            transform: rotate(180deg);
+        }
+
+        .collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible.expanded {
+            max-height: 800px;
+        }
+
+        .collapsible-content {
+            padding-top: 15px;
+        }
+
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 65px);
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .numpad .btn {
+            width: 65px;
+            height: 50px;
+            font-size: 18px;
+        }
+
+        .sources {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .sources .btn {
+            font-size: 11px;
+            height: 38px;
+        }
+
+        .section-title {
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            text-align: center;
         }
     </style>
 </head>
@@ -231,12 +274,12 @@
             <div class="model">42PFL6158K/12</div>
         </div>
 
-        <div id="status" class="status connected">Connected to 192.168.31.214</div>
+        <div id="status" class="status connected">Connected</div>
 
         <div class="section">
             <div class="btn-row">
                 <button class="btn power" onclick="sendKey('Standby')">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>
                     </svg>
                 </button>
@@ -244,16 +287,15 @@
         </div>
 
         <div class="section">
-            <div class="btn-row">
-                <button class="btn color-red" onclick="sendKey('RedColour')"></button>
-                <button class="btn color-green" onclick="sendKey('GreenColour')"></button>
-                <button class="btn color-yellow" onclick="sendKey('YellowColour')"></button>
-                <button class="btn color-blue" onclick="sendKey('BlueColour')"></button>
+            <div class="volume-slider">
+                <span>-</span>
+                <input type="range" id="volumeSlider" min="1" max="60" value="30" onchange="setVolume(this.value)">
+                <span>+</span>
+                <span class="volume-value" id="volumeValue">30</span>
             </div>
         </div>
 
         <div class="section">
-            <div class="section-title">Navigation</div>
             <div class="btn-row">
                 <button class="btn" onclick="sendKey('Home')">Home</button>
                 <button class="btn" onclick="sendKey('Source')">Source</button>
@@ -296,66 +338,83 @@
             </div>
         </div>
 
-        <div class="section">
-            <div class="section-title">Volume</div>
-            <div class="volume-slider">
-                <span>-</span>
-                <input type="range" id="volumeSlider" min="1" max="60" value="30" onchange="setVolume(this.value)">
-                <span>+</span>
-                <span class="volume-value" id="volumeValue">30</span>
-            </div>
-        </div>
+        <button class="expand-btn" id="expandBtn" onclick="toggleExpand()">
+            <span>More</span>
+            <span class="arrow">&#9660;</span>
+        </button>
 
-        <div class="section">
-            <div class="section-title">Numbers</div>
-            <div class="numpad">
-                <button class="btn" onclick="sendKey('Digit1')">1</button>
-                <button class="btn" onclick="sendKey('Digit2')">2</button>
-                <button class="btn" onclick="sendKey('Digit3')">3</button>
-                <button class="btn" onclick="sendKey('Digit4')">4</button>
-                <button class="btn" onclick="sendKey('Digit5')">5</button>
-                <button class="btn" onclick="sendKey('Digit6')">6</button>
-                <button class="btn" onclick="sendKey('Digit7')">7</button>
-                <button class="btn" onclick="sendKey('Digit8')">8</button>
-                <button class="btn" onclick="sendKey('Digit9')">9</button>
-                <button class="btn" onclick="sendKey('Previous')">Prev</button>
-                <button class="btn" onclick="sendKey('Digit0')">0</button>
-                <button class="btn" onclick="sendKey('Next')">Next</button>
-            </div>
-        </div>
+        <div class="collapsible" id="collapsible">
+            <div class="collapsible-content">
+                <div class="section">
+                    <div class="section-title">Numbers</div>
+                    <div class="numpad">
+                        <button class="btn" onclick="sendKey('Digit1')">1</button>
+                        <button class="btn" onclick="sendKey('Digit2')">2</button>
+                        <button class="btn" onclick="sendKey('Digit3')">3</button>
+                        <button class="btn" onclick="sendKey('Digit4')">4</button>
+                        <button class="btn" onclick="sendKey('Digit5')">5</button>
+                        <button class="btn" onclick="sendKey('Digit6')">6</button>
+                        <button class="btn" onclick="sendKey('Digit7')">7</button>
+                        <button class="btn" onclick="sendKey('Digit8')">8</button>
+                        <button class="btn" onclick="sendKey('Digit9')">9</button>
+                        <button class="btn" onclick="sendKey('Previous')">Prev</button>
+                        <button class="btn" onclick="sendKey('Digit0')">0</button>
+                        <button class="btn" onclick="sendKey('Next')">Next</button>
+                    </div>
+                </div>
 
-        <div class="section">
-            <div class="section-title">Playback</div>
-            <div class="btn-row">
-                <button class="btn" onclick="sendKey('Rewind')">&#9668;&#9668;</button>
-                <button class="btn" onclick="sendKey('Play')">&#9654;</button>
-                <button class="btn" onclick="sendKey('Pause')">&#10074;&#10074;</button>
-                <button class="btn" onclick="sendKey('FastForward')">&#9658;&#9658;</button>
-            </div>
-            <div class="btn-row">
-                <button class="btn" onclick="sendKey('Stop')">&#9632; Stop</button>
-                <button class="btn" onclick="sendKey('Record')">&#9679; Rec</button>
-            </div>
-        </div>
+                <div class="section">
+                    <div class="section-title">Playback</div>
+                    <div class="btn-row">
+                        <button class="btn" onclick="sendKey('Rewind')">&#9668;&#9668;</button>
+                        <button class="btn" onclick="sendKey('Play')">&#9654;</button>
+                        <button class="btn" onclick="sendKey('Pause')">&#10074;&#10074;</button>
+                        <button class="btn" onclick="sendKey('FastForward')">&#9658;&#9658;</button>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn" onclick="sendKey('Stop')">&#9632; Stop</button>
+                        <button class="btn" onclick="sendKey('Record')">&#9679; Rec</button>
+                    </div>
+                </div>
 
-        <div class="section">
-            <div class="section-title">Sources</div>
-            <div class="sources">
-                <button class="btn" onclick="setSource(11)">TV</button>
-                <button class="btn" onclick="setSource(17)">Satellite</button>
-                <button class="btn" onclick="setSource(28)">Game</button>
-                <button class="btn" onclick="setSource(29)">Home Theater</button>
-                <button class="btn" onclick="setSource(30)">HDMI 3</button>
-                <button class="btn" onclick="setSource(31)">HDMI 4</button>
-                <button class="btn" onclick="setSource(33)">Blu-ray</button>
-                <button class="btn" onclick="setSource(32)">SCART</button>
+                <div class="section">
+                    <div class="section-title">Sources</div>
+                    <div class="sources">
+                        <button class="btn" onclick="setSource(11)">TV</button>
+                        <button class="btn" onclick="setSource(17)">Satellite</button>
+                        <button class="btn" onclick="setSource(28)">Game</button>
+                        <button class="btn" onclick="setSource(29)">Home Theater</button>
+                        <button class="btn" onclick="setSource(30)">HDMI 3</button>
+                        <button class="btn" onclick="setSource(31)">HDMI 4</button>
+                        <button class="btn" onclick="setSource(33)">Blu-ray</button>
+                        <button class="btn" onclick="setSource(32)">SCART</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Color</div>
+                    <div class="btn-row">
+                        <button class="btn color-red" onclick="sendKey('RedColour')"></button>
+                        <button class="btn color-green" onclick="sendKey('GreenColour')"></button>
+                        <button class="btn color-yellow" onclick="sendKey('YellowColour')"></button>
+                        <button class="btn color-blue" onclick="sendKey('BlueColour')"></button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Use local proxy server to avoid CORS issues
         const API_BASE = '/api/1';
+
+        function toggleExpand() {
+            const btn = document.getElementById('expandBtn');
+            const content = document.getElementById('collapsible');
+            btn.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+            btn.querySelector('span:first-child').textContent =
+                content.classList.contains('expanded') ? 'Less' : 'More';
+        }
 
         async function sendKey(key) {
             try {
@@ -408,7 +467,7 @@
                 const data = await response.json();
                 document.getElementById('volumeSlider').value = data.current;
                 document.getElementById('volumeValue').textContent = data.current;
-                showStatus('connected', `Connected to TV`);
+                showStatus('connected', `Connected`);
             } catch (error) {
                 showStatus('error', 'Cannot connect to TV');
             }
@@ -420,10 +479,7 @@
             status.textContent = message;
         }
 
-        // Initial volume fetch
         getVolume();
-
-        // Refresh volume every 10 seconds
         setInterval(getVolume, 10000);
     </script>
 </body>
