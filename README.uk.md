@@ -8,7 +8,10 @@
 
 [English](README.md) | **Українська**
 
-![Screenshot](screenshot.png)
+<p align="center">
+  <img src="screenshot-collapsed.png" width="280" alt="Згорнутий">
+  <img src="screenshot-expanded.png" width="280" alt="Розгорнутий">
+</p>
 
 ## Підтримувані телевізори
 
