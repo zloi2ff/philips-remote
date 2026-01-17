@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Remote Control</title>
+    <title>Philips Remote</title>
 
     <!-- PWA / iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -37,7 +37,6 @@
             color: white;
         }
 
-        /* Pages */
         .page {
             display: none;
             width: 100%;
@@ -124,8 +123,18 @@
         }
 
         .btn:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
             background: linear-gradient(180deg, #252535 0%, #1a1a28 100%);
+        }
+
+        @keyframes btnPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        .btn.pressed {
+            animation: btnPress 0.15s ease-out;
         }
 
         .btn.power {
@@ -139,28 +148,6 @@
 
         .btn.power:active {
             background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
-        }
-
-        .btn.xbox-switch {
-            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: none;
-            flex-shrink: 0;
-        }
-
-        .btn.xbox-switch:active {
-            background: linear-gradient(180deg, #1a9c1a 0%, #107c10 100%);
-        }
-
-        .btn.tv-switch {
-            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: none;
-            flex-shrink: 0;
         }
 
         /* Volume slider */
@@ -419,104 +406,9 @@
         .btn.color-green { background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); }
         .btn.color-yellow { background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%); }
         .btn.color-blue { background: linear-gradient(180deg, #3498db 0%, #2980b9 100%); }
-
-        /* ========== XBOX STYLES ========== */
-        .xbox-content {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            justify-content: space-evenly;
-            align-items: center;
-        }
-
-        .xbox-dpad {
-            display: grid;
-            grid-template-columns: 70px 70px 70px;
-            grid-template-rows: 70px 70px 70px;
-            gap: 5px;
-        }
-
-        .xbox-dpad .btn {
-            width: 70px;
-            height: 70px;
-            font-size: 24px;
-            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .xbox-dpad .empty {
-            background: transparent;
-        }
-
-        .btn.xbox-home {
-            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: none;
-            font-size: 11px;
-            font-weight: 600;
-        }
-
-        .btn.xbox-home:active {
-            background: linear-gradient(180deg, #1a9c1a 0%, #107c10 100%);
-        }
-
-        /* Xbox ABXY buttons */
-        .xbox-buttons {
-            display: grid;
-            grid-template-columns: 65px 65px 65px;
-            grid-template-rows: 65px 65px 65px;
-            gap: 8px;
-        }
-
-        .xbox-buttons .btn {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            font-size: 22px;
-            font-weight: 700;
-            border: none;
-        }
-
-        .btn.xbox-y {
-            background: linear-gradient(180deg, #d4a017 0%, #a67c00 100%);
-        }
-
-        .btn.xbox-x {
-            background: linear-gradient(180deg, #0078d4 0%, #005a9e 100%);
-        }
-
-        .btn.xbox-b {
-            background: linear-gradient(180deg, #e81123 0%, #a80000 100%);
-        }
-
-        .btn.xbox-a {
-            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
-        }
-
-        .xbox-buttons .empty {
-            background: transparent;
-        }
-
-        /* Xbox menu buttons */
-        .xbox-menu-row {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        .xbox-menu-row .btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: 500;
-        }
     </style>
 </head>
 <body>
-    <!-- TV Page -->
     <div class="page active" id="tvPage">
         <div class="main-content">
             <div class="top-header">
@@ -529,11 +421,7 @@
                     <h1>PHILIPS 6158</h1>
                     <div id="tvStatus" class="status connected">Connected</div>
                 </div>
-                <button class="btn xbox-switch" onclick="vibrate(); showPage('xbox')">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M4.102 21.033C6.211 22.881 8.977 24 12 24c3.026 0 5.789-1.119 7.902-2.967 1.877-1.912-4.316-8.709-7.902-11.417-3.582 2.708-9.779 9.505-7.898 11.417zm11.16-14.406c2.5 2.961 7.484 10.313 6.076 12.912C23.056 17.036 24 14.62 24 12c0-4.032-1.996-7.6-5.055-9.763l-3.683 4.39zm-6.521 0L5.055 2.237C1.996 4.4 0 7.968 0 12c0 2.62.944 5.036 2.662 6.539-1.408-2.599 3.576-9.951 6.079-12.912zM12 0C9.497 0 7.127.838 5.18 2.287l3.696 4.402C10.168 5.667 11.399 5 12 5s1.832.667 3.124 1.689l3.696-4.402C16.873.839 14.503 0 12 0z"/>
-                    </svg>
-                </button>
+                <div style="width: 44px;"></div>
             </div>
 
             <div class="volume-row">
@@ -632,69 +520,28 @@
         </div>
     </div>
 
-    <!-- Xbox Page -->
-    <div class="page" id="xboxPage">
-        <div class="xbox-content">
-            <div class="top-header" style="width: 100%;">
-                <button class="btn tv-switch" onclick="showPage('tv')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="2" y="5" width="20" height="14" rx="2"/>
-                        <path d="M8 21h8M12 17v4"/>
-                    </svg>
-                </button>
-                <div class="header-center">
-                    <h1>XBOX</h1>
-                    <div id="xboxStatus" class="status connected">Ready</div>
-                </div>
-                <div style="width: 44px;"></div>
-            </div>
-
-            <div class="xbox-dpad">
-                <div class="empty"></div>
-                <button class="btn" onclick="xboxKey('dpad_up')">▲</button>
-                <div class="empty"></div>
-                <button class="btn" onclick="xboxKey('dpad_left')">◀</button>
-                <button class="btn xbox-home" onclick="xboxKey('nexus')">XBOX</button>
-                <button class="btn" onclick="xboxKey('dpad_right')">▶</button>
-                <div class="empty"></div>
-                <button class="btn" onclick="xboxKey('dpad_down')">▼</button>
-                <div class="empty"></div>
-            </div>
-
-            <div class="xbox-buttons">
-                <div class="empty"></div>
-                <button class="btn xbox-y" onclick="xboxKey('y')">Y</button>
-                <div class="empty"></div>
-                <button class="btn xbox-x" onclick="xboxKey('x')">X</button>
-                <div class="empty"></div>
-                <button class="btn xbox-b" onclick="xboxKey('b')">B</button>
-                <div class="empty"></div>
-                <button class="btn xbox-a" onclick="xboxKey('a')">A</button>
-                <div class="empty"></div>
-            </div>
-
-            <div class="xbox-menu-row">
-                <button class="btn" onclick="xboxKey('view')">View</button>
-                <button class="btn" onclick="xboxKey('menu')">Menu</button>
-            </div>
-        </div>
-    </div>
-
     <script>
         const API_BASE = '/api/1';
-        const XBOX_IP = '192.168.31.58';
 
-        // Vibration feedback
-        function vibrate(duration = 10) {
+        // Haptic/vibration feedback with visual fallback
+        function vibrate(duration = 10, element) {
             if ('vibrate' in navigator) {
-                navigator.vibrate(duration);
+                try { navigator.vibrate(duration); } catch (e) {}
+            }
+            if (element) {
+                element.classList.add('pressed');
+                setTimeout(() => element.classList.remove('pressed'), 150);
             }
         }
 
-        function showPage(page) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById(page + 'Page').classList.add('active');
-        }
+        // Add touch feedback to all buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function(e) {
+                    vibrate(10, this);
+                }, { passive: true });
+            });
+        });
 
         function toggleExpand(page) {
             const btn = document.getElementById(page + 'ExpandBtn');
@@ -707,7 +554,6 @@
                 content.classList.contains('expanded') ? 'Less controls' : 'More controls';
         }
 
-        // TV functions
         async function sendKey(key) {
             vibrate();
             try {
@@ -717,12 +563,12 @@
                     body: JSON.stringify({ key: key })
                 });
                 if (response.ok) {
-                    showTvStatus('connected', `${key}`);
+                    showStatus('connected', `${key}`);
                 } else {
-                    showTvStatus('error', `Error`);
+                    showStatus('error', `Error`);
                 }
             } catch (error) {
-                showTvStatus('error', `Offline`);
+                showStatus('error', `Offline`);
             }
         }
 
@@ -734,9 +580,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current: parseInt(value), muted: false })
                 });
-                showTvStatus('connected', `Vol: ${value}`);
+                showStatus('connected', `Vol: ${value}`);
             } catch (error) {
-                showTvStatus('error', 'Offline');
+                showStatus('error', 'Offline');
             }
         }
 
@@ -748,9 +594,9 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })
                 });
-                showTvStatus('connected', `Source OK`);
+                showStatus('connected', `Source OK`);
             } catch (error) {
-                showTvStatus('error', 'Offline');
+                showStatus('error', 'Offline');
             }
         }
 
@@ -760,39 +606,16 @@
                 const data = await response.json();
                 document.getElementById('volumeSlider').value = data.current;
                 document.getElementById('volumeValue').textContent = data.current;
-                showTvStatus('connected', `Connected`);
+                showStatus('connected', `Connected`);
             } catch (error) {
-                showTvStatus('error', 'Offline');
+                showStatus('error', 'Offline');
             }
         }
 
-        function showTvStatus(type, message) {
+        function showStatus(type, message) {
             const status = document.getElementById('tvStatus');
             status.className = `status ${type}`;
             status.textContent = message;
-        }
-
-        // Xbox functions
-        async function xboxKey(key) {
-            vibrate(15);
-            const status = document.getElementById('xboxStatus');
-            try {
-                const response = await fetch(`/api/xbox/input`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: key })
-                });
-                if (response.ok) {
-                    status.className = 'status connected';
-                    status.textContent = key.toUpperCase();
-                } else {
-                    status.className = 'status error';
-                    status.textContent = 'Error';
-                }
-            } catch (error) {
-                status.className = 'status error';
-                status.textContent = 'Offline';
-            }
         }
 
         getVolume();
