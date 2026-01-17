@@ -122,19 +122,10 @@
             justify-content: center;
         }
 
-        .btn:active {
+        .btn:active,
+        .btn.flash {
             transform: scale(0.92);
-            background: linear-gradient(180deg, #252535 0%, #1a1a28 100%);
-        }
-
-        @keyframes btnPress {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.9); }
-            100% { transform: scale(1); }
-        }
-
-        .btn.pressed {
-            animation: btnPress 0.15s ease-out;
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%) !important;
         }
 
         .btn.power {
@@ -523,22 +514,14 @@
     <script>
         const API_BASE = '/api/1';
 
-        // Haptic/vibration feedback with visual fallback
-        function vibrate(duration = 10, element) {
-            if ('vibrate' in navigator) {
-                try { navigator.vibrate(duration); } catch (e) {}
-            }
-            if (element) {
-                element.classList.add('pressed');
-                setTimeout(() => element.classList.remove('pressed'), 150);
-            }
-        }
-
-        // Add touch feedback to all buttons
+        // Visual feedback for button press
         document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.btn').forEach(btn => {
-                btn.addEventListener('touchstart', function(e) {
-                    vibrate(10, this);
+                btn.addEventListener('touchstart', function() {
+                    this.classList.add('flash');
+                }, { passive: true });
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('flash');
                 }, { passive: true });
             });
         });
@@ -555,7 +538,6 @@
         }
 
         async function sendKey(key) {
-            vibrate();
             try {
                 const response = await fetch(`${API_BASE}/input/key`, {
                     method: 'POST',
@@ -587,7 +569,6 @@
         }
 
         async function setSource(id) {
-            vibrate();
             try {
                 await fetch(`${API_BASE}/sources/current`, {
                     method: 'POST',

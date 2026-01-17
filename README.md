@@ -28,6 +28,7 @@ Web-based remote control for Philips Smart TV (JointSpace API v1).
 - Color buttons (red, green, yellow, blue)
 - Playback controls (play, pause, stop, rewind, forward)
 - Quick source switching (TV, HDMI, Blu-ray, etc.)
+- Visual button feedback on touch
 - PWA support (add to home screen on iOS/Android)
 
 ## Installation
