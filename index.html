@@ -42,9 +42,8 @@
             height: 100vh;
             max-height: 100vh;
             overflow-y: hidden;
-            padding: 10px 16px 20px;
+            padding: 10px 16px 40px;
             padding-top: calc(env(safe-area-inset-top, 10px) + 5px);
-            padding-bottom: env(safe-area-inset-bottom, 20px);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -54,6 +53,7 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             justify-content: flex-start;
+            padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
         }
 
         .main-content {
@@ -298,6 +298,11 @@
             justify-content: center;
             gap: 8px;
             margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .remote.expanded .expand-btn {
+            margin-top: 12px;
         }
 
         .expand-btn:active {
@@ -325,18 +330,18 @@
         }
 
         .collapsible-content {
-            padding-top: 15px;
+            padding-top: 10px;
         }
 
         .section {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .section-title {
-            font-size: 9px;
+            font-size: 8px;
             color: #555;
             text-transform: uppercase;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             text-align: center;
             letter-spacing: 1px;
         }
@@ -358,48 +363,48 @@
         .playback-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 8px;
+            gap: 6px;
+            margin-bottom: 6px;
         }
 
         .playback-row .btn {
-            height: 44px;
-            font-size: 14px;
+            height: 38px;
+            font-size: 13px;
         }
 
         .playback-row2 {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
         .playback-row2 .btn {
-            height: 40px;
-            font-size: 11px;
+            height: 34px;
+            font-size: 10px;
         }
 
         /* Sources */
         .sources {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
+            gap: 5px;
         }
 
         .sources .btn {
-            font-size: 10px;
-            height: 38px;
-            padding: 5px;
+            font-size: 9px;
+            height: 34px;
+            padding: 4px;
         }
 
         /* Color buttons */
         .color-row {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
         .color-row .btn {
-            height: 36px;
+            height: 32px;
             border: none;
         }
 
@@ -484,24 +489,6 @@
         <div class="collapsible" id="collapsible">
             <div class="collapsible-content">
                 <div class="section">
-                    <div class="section-title">Numbers</div>
-                    <div class="numpad">
-                        <button class="btn" onclick="sendKey('Digit1')">1</button>
-                        <button class="btn" onclick="sendKey('Digit2')">2</button>
-                        <button class="btn" onclick="sendKey('Digit3')">3</button>
-                        <button class="btn" onclick="sendKey('Digit4')">4</button>
-                        <button class="btn" onclick="sendKey('Digit5')">5</button>
-                        <button class="btn" onclick="sendKey('Digit6')">6</button>
-                        <button class="btn" onclick="sendKey('Digit7')">7</button>
-                        <button class="btn" onclick="sendKey('Digit8')">8</button>
-                        <button class="btn" onclick="sendKey('Digit9')">9</button>
-                        <button class="btn" onclick="sendKey('Previous')">Prev</button>
-                        <button class="btn" onclick="sendKey('Digit0')">0</button>
-                        <button class="btn" onclick="sendKey('Next')">Next</button>
-                    </div>
-                </div>
-
-                <div class="section">
                     <div class="section-title">Playback</div>
                     <div class="playback-row">
                         <button class="btn" onclick="sendKey('Rewind')">⏪</button>
@@ -529,14 +516,11 @@
                     </div>
                 </div>
 
-                <div class="section">
-                    <div class="section-title">Color</div>
-                    <div class="color-row">
-                        <button class="btn color-red" onclick="sendKey('RedColour')"></button>
-                        <button class="btn color-green" onclick="sendKey('GreenColour')"></button>
-                        <button class="btn color-yellow" onclick="sendKey('YellowColour')"></button>
-                        <button class="btn color-blue" onclick="sendKey('BlueColour')"></button>
-                    </div>
+                <div class="color-row">
+                    <button class="btn color-red" onclick="sendKey('RedColour')"></button>
+                    <button class="btn color-green" onclick="sendKey('GreenColour')"></button>
+                    <button class="btn color-yellow" onclick="sendKey('YellowColour')"></button>
+                    <button class="btn color-blue" onclick="sendKey('BlueColour')"></button>
                 </div>
             </div>
         </div>
