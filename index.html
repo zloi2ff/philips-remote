@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
-    <title>Philips 6158 Remote</title>
+    <title>Remote Control</title>
 
     <!-- PWA / iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="TV Remote">
-    <meta name="theme-color" content="#1a1a2e">
+    <meta name="apple-mobile-web-app-title" content="Remote">
+    <meta name="theme-color" content="#000000">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <style>
@@ -37,19 +37,24 @@
             color: white;
         }
 
-        .remote {
+        /* Pages */
+        .page {
+            display: none;
             width: 100%;
             height: 100vh;
             max-height: 100vh;
             overflow-y: hidden;
             padding: 10px 16px 40px;
             padding-top: calc(env(safe-area-inset-top, 10px) + 5px);
-            display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .remote.expanded {
+        .page.active {
+            display: flex;
+        }
+
+        .page.expanded {
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             justify-content: flex-start;
@@ -68,18 +73,17 @@
             margin-bottom: 0;
         }
 
-        .remote.expanded .main-content {
+        .page.expanded .main-content {
             flex: none;
             justify-content: flex-start;
             gap: 12px;
         }
 
-        /* Top header with power button */
+        /* Top header */
         .top-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
         }
 
         .header-center {
@@ -95,10 +99,6 @@
             letter-spacing: 1px;
         }
 
-        .header-spacer {
-            width: 44px;
-        }
-
         .status {
             padding: 3px 10px;
             border-radius: 10px;
@@ -109,11 +109,7 @@
         .status.connected { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
         .status.error { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
 
-        /* Volume row */
-        .volume-row {
-            margin-bottom: 12px;
-        }
-
+        /* Buttons */
         .btn {
             background: linear-gradient(180deg, #1a1a28 0%, #12121a 100%);
             border: 1px solid rgba(255,255,255,0.08);
@@ -143,6 +139,33 @@
 
         .btn.power:active {
             background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .btn.xbox-switch {
+            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .btn.xbox-switch:active {
+            background: linear-gradient(180deg, #1a9c1a 0%, #107c10 100%);
+        }
+
+        .btn.tv-switch {
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        /* Volume slider */
+        .volume-row {
+            margin-bottom: 12px;
         }
 
         .volume-slider {
@@ -186,12 +209,11 @@
             color: #3498db;
         }
 
-        /* Navigation buttons row */
+        /* Navigation row */
         .nav-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-bottom: 12px;
         }
 
         .nav-row .btn {
@@ -200,16 +222,15 @@
             font-weight: 500;
         }
 
-        /* Main control area */
+        /* Main controls */
         .main-controls {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
             gap: 8px;
         }
 
-        /* Side volume/channel buttons */
+        /* Side controls */
         .side-controls {
             display: flex;
             flex-direction: column;
@@ -269,12 +290,11 @@
             background: transparent;
         }
 
-        /* Action buttons */
+        /* Action row */
         .action-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin-bottom: 12px;
         }
 
         .action-row .btn {
@@ -301,7 +321,7 @@
             flex-shrink: 0;
         }
 
-        .remote.expanded .expand-btn {
+        .page.expanded .expand-btn {
             margin-top: 12px;
         }
 
@@ -344,19 +364,6 @@
             margin-bottom: 6px;
             text-align: center;
             letter-spacing: 1px;
-        }
-
-        /* Numpad */
-        .numpad {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .numpad .btn {
-            height: 48px;
-            font-size: 18px;
-            font-weight: 400;
         }
 
         /* Playback */
@@ -412,81 +419,180 @@
         .btn.color-green { background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); }
         .btn.color-yellow { background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%); }
         .btn.color-blue { background: linear-gradient(180deg, #3498db 0%, #2980b9 100%); }
+
+        /* ========== XBOX STYLES ========== */
+        .xbox-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+
+        .xbox-dpad {
+            display: grid;
+            grid-template-columns: 70px 70px 70px;
+            grid-template-rows: 70px 70px 70px;
+            gap: 5px;
+        }
+
+        .xbox-dpad .btn {
+            width: 70px;
+            height: 70px;
+            font-size: 24px;
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .xbox-dpad .empty {
+            background: transparent;
+        }
+
+        .btn.xbox-home {
+            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .btn.xbox-home:active {
+            background: linear-gradient(180deg, #1a9c1a 0%, #107c10 100%);
+        }
+
+        /* Xbox ABXY buttons */
+        .xbox-buttons {
+            display: grid;
+            grid-template-columns: 65px 65px 65px;
+            grid-template-rows: 65px 65px 65px;
+            gap: 8px;
+        }
+
+        .xbox-buttons .btn {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: 700;
+            border: none;
+        }
+
+        .btn.xbox-y {
+            background: linear-gradient(180deg, #d4a017 0%, #a67c00 100%);
+        }
+
+        .btn.xbox-x {
+            background: linear-gradient(180deg, #0078d4 0%, #005a9e 100%);
+        }
+
+        .btn.xbox-b {
+            background: linear-gradient(180deg, #e81123 0%, #a80000 100%);
+        }
+
+        .btn.xbox-a {
+            background: linear-gradient(180deg, #107c10 0%, #0a5c0a 100%);
+        }
+
+        .xbox-buttons .empty {
+            background: transparent;
+        }
+
+        /* Xbox menu buttons */
+        .xbox-menu-row {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .xbox-menu-row .btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
-    <div class="remote" id="remote">
+    <!-- TV Page -->
+    <div class="page active" id="tvPage">
         <div class="main-content">
-        <div class="top-header">
-            <button class="btn power" onclick="sendKey('Standby')">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>
-                </svg>
-            </button>
-            <div class="header-center">
-                <h1>PHILIPS 6158</h1>
-                <div id="status" class="status connected">Connected</div>
-            </div>
-            <div class="header-spacer"></div>
-        </div>
-
-        <div class="volume-row">
-            <div class="volume-slider">
-                <span>🔈</span>
-                <input type="range" id="volumeSlider" min="1" max="60" value="30" onchange="setVolume(this.value)">
-                <span class="volume-value" id="volumeValue">30</span>
-            </div>
-        </div>
-
-        <div class="nav-row">
-            <button class="btn" onclick="sendKey('Home')">Home</button>
-            <button class="btn" onclick="sendKey('Source')">Source</button>
-            <button class="btn" onclick="sendKey('Options')">Options</button>
-        </div>
-
-        <div class="main-controls">
-            <div class="side-controls">
-                <div class="label">Vol</div>
-                <button class="btn" onclick="sendKey('VolumeUp')">+</button>
-                <button class="btn mute" onclick="sendKey('Mute')">MUTE</button>
-                <button class="btn" onclick="sendKey('VolumeDown')">−</button>
+            <div class="top-header">
+                <button class="btn power" onclick="sendKey('Standby')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>
+                    </svg>
+                </button>
+                <div class="header-center">
+                    <h1>PHILIPS 6158</h1>
+                    <div id="tvStatus" class="status connected">Connected</div>
+                </div>
+                <button class="btn xbox-switch" onclick="vibrate(); showPage('xbox')">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M4.102 21.033C6.211 22.881 8.977 24 12 24c3.026 0 5.789-1.119 7.902-2.967 1.877-1.912-4.316-8.709-7.902-11.417-3.582 2.708-9.779 9.505-7.898 11.417zm11.16-14.406c2.5 2.961 7.484 10.313 6.076 12.912C23.056 17.036 24 14.62 24 12c0-4.032-1.996-7.6-5.055-9.763l-3.683 4.39zm-6.521 0L5.055 2.237C1.996 4.4 0 7.968 0 12c0 2.62.944 5.036 2.662 6.539-1.408-2.599 3.576-9.951 6.079-12.912zM12 0C9.497 0 7.127.838 5.18 2.287l3.696 4.402C10.168 5.667 11.399 5 12 5s1.832.667 3.124 1.689l3.696-4.402C16.873.839 14.503 0 12 0z"/>
+                    </svg>
+                </button>
             </div>
 
-            <div class="dpad-container">
-                <div class="dpad">
-                    <div class="empty"></div>
-                    <button class="btn" onclick="sendKey('CursorUp')">▲</button>
-                    <div class="empty"></div>
-                    <button class="btn" onclick="sendKey('CursorLeft')">◀</button>
-                    <button class="btn ok" onclick="sendKey('Confirm')">OK</button>
-                    <button class="btn" onclick="sendKey('CursorRight')">▶</button>
-                    <div class="empty"></div>
-                    <button class="btn" onclick="sendKey('CursorDown')">▼</button>
-                    <div class="empty"></div>
+            <div class="volume-row">
+                <div class="volume-slider">
+                    <span>🔈</span>
+                    <input type="range" id="volumeSlider" min="1" max="60" value="30" onchange="setVolume(this.value)">
+                    <span class="volume-value" id="volumeValue">30</span>
                 </div>
             </div>
 
-            <div class="side-controls">
-                <div class="label">Ch</div>
-                <button class="btn" onclick="sendKey('ChannelStepUp')">+</button>
-                <button class="btn mute" onclick="sendKey('Info')">INFO</button>
-                <button class="btn" onclick="sendKey('ChannelStepDown')">−</button>
+            <div class="nav-row">
+                <button class="btn" onclick="sendKey('Home')">Home</button>
+                <button class="btn" onclick="sendKey('Source')">Source</button>
+                <button class="btn" onclick="sendKey('Options')">Options</button>
+            </div>
+
+            <div class="main-controls">
+                <div class="side-controls">
+                    <div class="label">Vol</div>
+                    <button class="btn" onclick="sendKey('VolumeUp')">+</button>
+                    <button class="btn mute" onclick="sendKey('Mute')">MUTE</button>
+                    <button class="btn" onclick="sendKey('VolumeDown')">−</button>
+                </div>
+
+                <div class="dpad-container">
+                    <div class="dpad">
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorUp')">▲</button>
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorLeft')">◀</button>
+                        <button class="btn ok" onclick="sendKey('Confirm')">OK</button>
+                        <button class="btn" onclick="sendKey('CursorRight')">▶</button>
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorDown')">▼</button>
+                        <div class="empty"></div>
+                    </div>
+                </div>
+
+                <div class="side-controls">
+                    <div class="label">Ch</div>
+                    <button class="btn" onclick="sendKey('ChannelStepUp')">+</button>
+                    <button class="btn mute" onclick="sendKey('Info')">INFO</button>
+                    <button class="btn" onclick="sendKey('ChannelStepDown')">−</button>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn" onclick="sendKey('Back')">← Back</button>
+                <button class="btn" onclick="sendKey('Find')">Search</button>
+                <button class="btn" onclick="sendKey('Adjust')">Adjust</button>
             </div>
         </div>
 
-        <div class="action-row">
-            <button class="btn" onclick="sendKey('Back')">← Back</button>
-            <button class="btn" onclick="sendKey('Find')">Search</button>
-            <button class="btn" onclick="sendKey('Adjust')">Adjust</button>
-        </div>
-        </div>
-
-        <button class="expand-btn" id="expandBtn" onclick="toggleExpand()">
+        <button class="expand-btn" id="tvExpandBtn" onclick="toggleExpand('tv')">
             <span>More controls</span>
             <span class="arrow">▼</span>
         </button>
 
-        <div class="collapsible" id="collapsible">
+        <div class="collapsible" id="tvCollapsible">
             <div class="collapsible-content">
                 <div class="section">
                     <div class="section-title">Playback</div>
@@ -526,21 +632,84 @@
         </div>
     </div>
 
+    <!-- Xbox Page -->
+    <div class="page" id="xboxPage">
+        <div class="xbox-content">
+            <div class="top-header" style="width: 100%;">
+                <button class="btn tv-switch" onclick="showPage('tv')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </button>
+                <div class="header-center">
+                    <h1>XBOX</h1>
+                    <div id="xboxStatus" class="status connected">Ready</div>
+                </div>
+                <div style="width: 44px;"></div>
+            </div>
+
+            <div class="xbox-dpad">
+                <div class="empty"></div>
+                <button class="btn" onclick="xboxKey('dpad_up')">▲</button>
+                <div class="empty"></div>
+                <button class="btn" onclick="xboxKey('dpad_left')">◀</button>
+                <button class="btn xbox-home" onclick="xboxKey('nexus')">XBOX</button>
+                <button class="btn" onclick="xboxKey('dpad_right')">▶</button>
+                <div class="empty"></div>
+                <button class="btn" onclick="xboxKey('dpad_down')">▼</button>
+                <div class="empty"></div>
+            </div>
+
+            <div class="xbox-buttons">
+                <div class="empty"></div>
+                <button class="btn xbox-y" onclick="xboxKey('y')">Y</button>
+                <div class="empty"></div>
+                <button class="btn xbox-x" onclick="xboxKey('x')">X</button>
+                <div class="empty"></div>
+                <button class="btn xbox-b" onclick="xboxKey('b')">B</button>
+                <div class="empty"></div>
+                <button class="btn xbox-a" onclick="xboxKey('a')">A</button>
+                <div class="empty"></div>
+            </div>
+
+            <div class="xbox-menu-row">
+                <button class="btn" onclick="xboxKey('view')">View</button>
+                <button class="btn" onclick="xboxKey('menu')">Menu</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/1';
+        const XBOX_IP = '192.168.31.58';
 
-        function toggleExpand() {
-            const btn = document.getElementById('expandBtn');
-            const content = document.getElementById('collapsible');
-            const remote = document.getElementById('remote');
+        // Vibration feedback
+        function vibrate(duration = 10) {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(duration);
+            }
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page + 'Page').classList.add('active');
+        }
+
+        function toggleExpand(page) {
+            const btn = document.getElementById(page + 'ExpandBtn');
+            const content = document.getElementById(page + 'Collapsible');
+            const pageEl = document.getElementById(page + 'Page');
             btn.classList.toggle('expanded');
             content.classList.toggle('expanded');
-            remote.classList.toggle('expanded');
+            pageEl.classList.toggle('expanded');
             btn.querySelector('span:first-child').textContent =
                 content.classList.contains('expanded') ? 'Less controls' : 'More controls';
         }
 
+        // TV functions
         async function sendKey(key) {
+            vibrate();
             try {
                 const response = await fetch(`${API_BASE}/input/key`, {
                     method: 'POST',
@@ -548,12 +717,12 @@
                     body: JSON.stringify({ key: key })
                 });
                 if (response.ok) {
-                    showStatus('connected', `${key}`);
+                    showTvStatus('connected', `${key}`);
                 } else {
-                    showStatus('error', `Error`);
+                    showTvStatus('error', `Error`);
                 }
             } catch (error) {
-                showStatus('error', `Offline`);
+                showTvStatus('error', `Offline`);
             }
         }
 
@@ -565,22 +734,23 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current: parseInt(value), muted: false })
                 });
-                showStatus('connected', `Vol: ${value}`);
+                showTvStatus('connected', `Vol: ${value}`);
             } catch (error) {
-                showStatus('error', 'Offline');
+                showTvStatus('error', 'Offline');
             }
         }
 
         async function setSource(id) {
+            vibrate();
             try {
                 await fetch(`${API_BASE}/sources/current`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })
                 });
-                showStatus('connected', `Source OK`);
+                showTvStatus('connected', `Source OK`);
             } catch (error) {
-                showStatus('error', 'Offline');
+                showTvStatus('error', 'Offline');
             }
         }
 
@@ -590,16 +760,39 @@
                 const data = await response.json();
                 document.getElementById('volumeSlider').value = data.current;
                 document.getElementById('volumeValue').textContent = data.current;
-                showStatus('connected', `Connected`);
+                showTvStatus('connected', `Connected`);
             } catch (error) {
-                showStatus('error', 'Offline');
+                showTvStatus('error', 'Offline');
             }
         }
 
-        function showStatus(type, message) {
-            const status = document.getElementById('status');
+        function showTvStatus(type, message) {
+            const status = document.getElementById('tvStatus');
             status.className = `status ${type}`;
             status.textContent = message;
+        }
+
+        // Xbox functions
+        async function xboxKey(key) {
+            vibrate(15);
+            const status = document.getElementById('xboxStatus');
+            try {
+                const response = await fetch(`/api/xbox/input`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: key })
+                });
+                if (response.ok) {
+                    status.className = 'status connected';
+                    status.textContent = key.toUpperCase();
+                } else {
+                    status.className = 'status error';
+                    status.textContent = 'Error';
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = 'Offline';
+            }
         }
 
         getVolume();
