@@ -41,13 +41,37 @@
             width: 100%;
             height: 100vh;
             max-height: 100vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow-y: hidden;
             padding: 10px 16px 20px;
             padding-top: calc(env(safe-area-inset-top, 10px) + 5px);
             padding-bottom: env(safe-area-inset-bottom, 20px);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .remote.expanded {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            justify-content: flex-start;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-evenly;
+            gap: 0;
+        }
+
+        .main-content > * {
+            margin-bottom: 0;
+        }
+
+        .remote.expanded .main-content {
+            flex: none;
+            justify-content: flex-start;
+            gap: 12px;
         }
 
         /* Top header with power button */
@@ -386,7 +410,8 @@
     </style>
 </head>
 <body>
-    <div class="remote">
+    <div class="remote" id="remote">
+        <div class="main-content">
         <div class="top-header">
             <button class="btn power" onclick="sendKey('Standby')">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -448,6 +473,7 @@
             <button class="btn" onclick="sendKey('Back')">← Back</button>
             <button class="btn" onclick="sendKey('Find')">Search</button>
             <button class="btn" onclick="sendKey('Adjust')">Adjust</button>
+        </div>
         </div>
 
         <button class="expand-btn" id="expandBtn" onclick="toggleExpand()">
@@ -522,8 +548,10 @@
         function toggleExpand() {
             const btn = document.getElementById('expandBtn');
             const content = document.getElementById('collapsible');
+            const remote = document.getElementById('remote');
             btn.classList.toggle('expanded');
             content.classList.toggle('expanded');
+            remote.classList.toggle('expanded');
             btn.querySelector('span:first-child').textContent =
                 content.classList.contains('expanded') ? 'Less controls' : 'More controls';
         }
