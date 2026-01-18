@@ -1,9 +1,10 @@
 # Philips TV Remote
 
-Веб-пульт для телевізора Philips Smart TV (JointSpace API v1).
+Веб-пульт для телевізора Philips Smart TV (JointSpace API v1). Доступний як веб-додаток та нативний iOS застосунок.
 
 ![Remote](https://img.shields.io/badge/TV-Philips%206158-blue)
 ![Python](https://img.shields.io/badge/Python-3.x-green)
+![Capacitor](https://img.shields.io/badge/Capacitor-8.x-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 [English](README.md) | **Українська**
@@ -24,12 +25,13 @@
 - Навігація (стрілки, OK, Назад, Додому)
 - Керування гучністю (+/-, без звуку, слайдер)
 - Перемикання каналів (+/-)
-- Цифрова клавіатура (0-9)
 - Кольорові кнопки (червона, зелена, жовта, синя)
 - Керування відтворенням (play, pause, stop, перемотка)
 - Швидке перемикання джерел (TV, HDMI, Blu-ray тощо)
-- Візуальний відгук кнопок при натисканні
+- Візуальний відгук з вібрацією (iOS)
+- Налаштування IP-адреси сервера в застосунку
 - PWA підтримка (додавання на домашній екран iOS/Android)
+- Нативний iOS застосунок (Capacitor)
 
 ## Встановлення
 
@@ -64,9 +66,36 @@ sudo systemctl start philips-remote
 
 ## Використання на iPhone/Android
 
+### Веб-додаток (PWA)
+
 1. Відкрий `http://IP_СЕРВЕРА:8888` в Safari/Chrome
 2. Натисни Поділитись → "На Початковий екран"
 3. Використовуй як звичайний додаток
+
+### Нативний iOS застосунок
+
+Збірка та встановлення через Xcode:
+
+```bash
+# Встановити залежності
+npm install
+
+# Синхронізувати з iOS
+npx cap sync ios
+
+# Відкрити в Xcode
+npx cap open ios
+```
+
+В Xcode:
+1. Вибери свій iPhone
+2. Налаштуй підпис (Signing & Capabilities → Team)
+3. Натисни Run (Cmd+R)
+
+**Налаштування IP сервера в застосунку:**
+- Натисни шестеренку (вгорі справа)
+- Введи IP-адресу Mac та порт (8888)
+- Збережи
 
 ## API
 

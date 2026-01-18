@@ -1,6 +1,6 @@
 # Philips TV Remote
 
-Web-based remote control for Philips Smart TV (JointSpace API v1).
+Web-based remote control for Philips Smart TV (JointSpace API v1). Available as web app and native iOS app.
 
 **English** | [Українська](README.uk.md)
 
@@ -11,6 +11,7 @@ Web-based remote control for Philips Smart TV (JointSpace API v1).
 
 ![Remote](https://img.shields.io/badge/TV-Philips%206158-blue)
 ![Python](https://img.shields.io/badge/Python-3.x-green)
+![Capacitor](https://img.shields.io/badge/Capacitor-8.x-blue)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 ## Supported TV
@@ -24,12 +25,13 @@ Web-based remote control for Philips Smart TV (JointSpace API v1).
 - Navigation (arrows, OK, Back, Home)
 - Volume control (+/-, mute, slider)
 - Channel switching (+/-)
-- Numeric keypad (0-9)
 - Color buttons (red, green, yellow, blue)
 - Playback controls (play, pause, stop, rewind, forward)
 - Quick source switching (TV, HDMI, Blu-ray, etc.)
-- Visual button feedback on touch
+- Visual button feedback with haptic (iOS)
+- Configurable server IP address in app
 - PWA support (add to home screen on iOS/Android)
+- Native iOS app (Capacitor)
 
 ## Installation
 
@@ -64,9 +66,36 @@ sudo systemctl start philips-remote
 
 ## Usage on iPhone/Android
 
+### Web App (PWA)
+
 1. Open `http://YOUR_SERVER_IP:8888` in Safari/Chrome
 2. Tap Share button → "Add to Home Screen"
 3. Use as a native app
+
+### Native iOS App
+
+Build and install with Xcode:
+
+```bash
+# Install dependencies
+npm install
+
+# Sync with iOS
+npx cap sync ios
+
+# Open in Xcode
+npx cap open ios
+```
+
+In Xcode:
+1. Select your iPhone device
+2. Configure signing (Signing & Capabilities → Team)
+3. Press Run (Cmd+R)
+
+**Configure server IP in the app:**
+- Tap the gear icon (top right)
+- Enter your Mac's IP address and port (8888)
+- Save
 
 ## API Reference
 

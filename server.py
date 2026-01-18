@@ -1,22 +1,30 @@
 #!/usr/bin/env python3
 """
 Philips TV Remote Control Server
-Proxies requests to JointSpace API
+Proxies requests to JointSpace API and serves web UI
 """
 
 import http.server
 import json
 import urllib.request
 import urllib.error
+import os
 
 # Configuration
 TV_IP = "192.168.31.214"
 TV_PORT = 1925
 SERVER_PORT = 8888
 
+# Get the directory where this script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+WWW_DIR = os.path.join(SCRIPT_DIR, 'www')
+
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
-    """HTTP handler for TV API"""
+    """HTTP handler for TV API and static files"""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=WWW_DIR, **kwargs)
 
     def _send_json(self, data, status=200):
         self.send_response(status)
@@ -26,6 +34,10 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
 
     def do_GET(self):
+        # Serve index.html for root path
+        if self.path == '/':
+            self.path = '/index.html'
+
         if self.path.startswith('/api/'):
             self.proxy_tv('GET')
         else:

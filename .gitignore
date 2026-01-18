@@ -1,3 +1,14 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Node
+node_modules/
+
+# iOS build artifacts
+ios/App/build/
+ios/App/Pods/
+*.ipa
+
+# Capacitor
+.claude/

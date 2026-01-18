@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Philips Remote</title>
+
+    <!-- PWA / iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Remote">
+    <meta name="theme-color" content="#000000">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            position: fixed;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            overscroll-behavior: none;
+            -webkit-overflow-scrolling: auto;
+            touch-action: manipulation;
+            background: #000000;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000000;
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            max-height: 100vh;
+            overflow-y: hidden;
+            padding: 10px 16px 40px;
+            padding-top: calc(env(safe-area-inset-top, 10px) + 5px);
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .page.active {
+            display: flex;
+        }
+
+        .page.expanded {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            justify-content: flex-start;
+            padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-evenly;
+            gap: 0;
+        }
+
+        .main-content > * {
+            margin-bottom: 0;
+        }
+
+        .page.expanded .main-content {
+            flex: none;
+            justify-content: flex-start;
+            gap: 12px;
+        }
+
+        /* Top header */
+        .top-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-center {
+            text-align: center;
+            flex: 1;
+        }
+
+        .header-center h1 {
+            font-size: 13px;
+            margin: 0 0 4px 0;
+            color: #555;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .status {
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 9px;
+            display: inline-block;
+        }
+
+        .status.connected { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+        .status.error { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(180deg, #1a1a28 0%, #12121a 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            color: white;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn:active,
+        .btn.flash {
+            transform: scale(0.92);
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%) !important;
+        }
+
+        .btn.power {
+            background: linear-gradient(180deg, #c0392b 0%, #962020 100%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        .btn.power:active {
+            background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        /* Volume slider */
+        .volume-row {
+            margin-bottom: 12px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.02);
+            padding: 12px 15px;
+            border-radius: 16px;
+        }
+
+        .volume-slider input {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #1a1a28;
+            border-radius: 3px;
+            outline: none;
+        }
+
+        .volume-slider input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: #3498db;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-slider span {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .volume-value {
+            min-width: 24px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        /* Navigation row */
+        .nav-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .nav-row .btn {
+            height: 42px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Main controls */
+        .main-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        /* Side controls */
+        .side-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 52px;
+        }
+
+        .side-controls .btn {
+            width: 52px;
+            height: 48px;
+            font-size: 18px;
+            font-weight: 300;
+        }
+
+        .side-controls .btn.mute {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .side-controls .label {
+            font-size: 8px;
+            color: #555;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        /* D-pad */
+        .dpad-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 58px 58px 58px;
+            grid-template-rows: 58px 58px 58px;
+            gap: 4px;
+        }
+
+        .dpad .btn {
+            width: 58px;
+            height: 58px;
+            font-size: 20px;
+        }
+
+        .dpad .btn.ok {
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .dpad .empty {
+            background: transparent;
+        }
+
+        /* Action row */
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .action-row .btn {
+            height: 42px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Expand button */
+        .expand-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 12px;
+            color: #666;
+            font-size: 11px;
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .page.expanded .expand-btn {
+            margin-top: 12px;
+        }
+
+        .expand-btn:active {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .expand-btn .arrow {
+            transition: transform 0.3s;
+            font-size: 10px;
+        }
+
+        .expand-btn.expanded .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Collapsible */
+        .collapsible {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible.expanded {
+            max-height: 700px;
+        }
+
+        .collapsible-content {
+            padding-top: 10px;
+        }
+
+        .section {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 8px;
+            color: #555;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        /* Playback */
+        .playback-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .playback-row .btn {
+            height: 38px;
+            font-size: 13px;
+        }
+
+        .playback-row2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .playback-row2 .btn {
+            height: 34px;
+            font-size: 10px;
+        }
+
+        /* Sources */
+        .sources {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+        }
+
+        .sources .btn {
+            font-size: 9px;
+            height: 34px;
+            padding: 4px;
+        }
+
+        /* Color buttons */
+        .color-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+
+        .color-row .btn {
+            height: 32px;
+            border: none;
+        }
+
+        .btn.color-red { background: linear-gradient(180deg, #e74c3c 0%, #c0392b 100%); }
+        .btn.color-green { background: linear-gradient(180deg, #27ae60 0%, #1e8449 100%); }
+        .btn.color-yellow { background: linear-gradient(180deg, #f1c40f 0%, #d4ac0d 100%); }
+        .btn.color-blue { background: linear-gradient(180deg, #3498db 0%, #2980b9 100%); }
+
+        /* Settings button */
+        .btn.settings {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #1a1a28;
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 320px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .modal h2 {
+            margin: 0 0 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 6px;
+        }
+
+        .modal input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #12121a;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .modal input:focus {
+            border-color: #3498db;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-buttons .btn {
+            flex: 1;
+            height: 44px;
+            font-size: 14px;
+        }
+
+        .modal-buttons .btn.primary {
+            background: linear-gradient(180deg, #3498db 0%, #2980b9 100%);
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="page active" id="tvPage">
+        <div class="main-content">
+            <div class="top-header">
+                <button class="btn power" onclick="sendKey('Standby')">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>
+                    </svg>
+                </button>
+                <div class="header-center">
+                    <h1>PHILIPS 6158</h1>
+                    <div id="tvStatus" class="status connected">Connected</div>
+                </div>
+                <button class="btn settings" onclick="openSettings()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="volume-row">
+                <div class="volume-slider">
+                    <span>🔈</span>
+                    <input type="range" id="volumeSlider" min="1" max="60" value="30" onchange="setVolume(this.value)">
+                    <span class="volume-value" id="volumeValue">30</span>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button class="btn" onclick="sendKey('Home')">Home</button>
+                <button class="btn" onclick="sendKey('Source')">Source</button>
+                <button class="btn" onclick="sendKey('Options')">Options</button>
+            </div>
+
+            <div class="main-controls">
+                <div class="side-controls">
+                    <div class="label">Vol</div>
+                    <button class="btn" onclick="sendKey('VolumeUp')">+</button>
+                    <button class="btn mute" onclick="sendKey('Mute')">MUTE</button>
+                    <button class="btn" onclick="sendKey('VolumeDown')">−</button>
+                </div>
+
+                <div class="dpad-container">
+                    <div class="dpad">
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorUp')">▲</button>
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorLeft')">◀</button>
+                        <button class="btn ok" onclick="sendKey('Confirm')">OK</button>
+                        <button class="btn" onclick="sendKey('CursorRight')">▶</button>
+                        <div class="empty"></div>
+                        <button class="btn" onclick="sendKey('CursorDown')">▼</button>
+                        <div class="empty"></div>
+                    </div>
+                </div>
+
+                <div class="side-controls">
+                    <div class="label">Ch</div>
+                    <button class="btn" onclick="sendKey('ChannelStepUp')">+</button>
+                    <button class="btn mute" onclick="sendKey('Info')">INFO</button>
+                    <button class="btn" onclick="sendKey('ChannelStepDown')">−</button>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button class="btn" onclick="sendKey('Back')">← Back</button>
+                <button class="btn" onclick="sendKey('Find')">Search</button>
+                <button class="btn" onclick="sendKey('Adjust')">Adjust</button>
+            </div>
+        </div>
+
+        <button class="expand-btn" id="tvExpandBtn" onclick="toggleExpand('tv')">
+            <span>More controls</span>
+            <span class="arrow">▼</span>
+        </button>
+
+        <div class="collapsible" id="tvCollapsible">
+            <div class="collapsible-content">
+                <div class="section">
+                    <div class="section-title">Playback</div>
+                    <div class="playback-row">
+                        <button class="btn" onclick="sendKey('Rewind')">⏪</button>
+                        <button class="btn" onclick="sendKey('Play')">▶</button>
+                        <button class="btn" onclick="sendKey('Pause')">⏸</button>
+                        <button class="btn" onclick="sendKey('FastForward')">⏩</button>
+                    </div>
+                    <div class="playback-row2">
+                        <button class="btn" onclick="sendKey('Stop')">⏹ Stop</button>
+                        <button class="btn" onclick="sendKey('Record')">⏺ Rec</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Sources</div>
+                    <div class="sources">
+                        <button class="btn" onclick="setSource(11)">TV</button>
+                        <button class="btn" onclick="setSource(17)">SAT</button>
+                        <button class="btn" onclick="setSource(28)">Game</button>
+                        <button class="btn" onclick="setSource(29)">Theater</button>
+                        <button class="btn" onclick="setSource(30)">HDMI 3</button>
+                        <button class="btn" onclick="setSource(31)">HDMI 4</button>
+                        <button class="btn" onclick="setSource(33)">Blu-ray</button>
+                        <button class="btn" onclick="setSource(32)">SCART</button>
+                    </div>
+                </div>
+
+                <div class="color-row">
+                    <button class="btn color-red" onclick="sendKey('RedColour')"></button>
+                    <button class="btn color-green" onclick="sendKey('GreenColour')"></button>
+                    <button class="btn color-yellow" onclick="sendKey('YellowColour')"></button>
+                    <button class="btn color-blue" onclick="sendKey('BlueColour')"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <h2>Settings</h2>
+            <label>Server IP Address</label>
+            <input type="text" id="serverIpInput" placeholder="192.168.1.100">
+            <label>Port</label>
+            <input type="text" id="serverPortInput" placeholder="8888">
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeSettings()">Cancel</button>
+                <button class="btn primary" onclick="saveSettings()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default server settings
+        const DEFAULT_IP = '192.168.31.115';
+        const DEFAULT_PORT = '8888';
+
+        // Check if running on the same server (not file:// or different host)
+        function isLocalServer() {
+            return window.location.protocol !== 'file:' &&
+                   window.location.port === DEFAULT_PORT;
+        }
+
+        // Load settings from localStorage
+        function getServerUrl() {
+            // If running on the proxy server, use relative paths
+            if (isLocalServer()) {
+                return '';
+            }
+            const ip = localStorage.getItem('serverIp') || DEFAULT_IP;
+            const port = localStorage.getItem('serverPort') || DEFAULT_PORT;
+            return `http://${ip}:${port}`;
+        }
+
+        function getApiBase() {
+            return `${getServerUrl()}/api/1`;
+        }
+
+        // Settings modal functions
+        function openSettings() {
+            const ip = localStorage.getItem('serverIp') || DEFAULT_IP;
+            const port = localStorage.getItem('serverPort') || DEFAULT_PORT;
+            document.getElementById('serverIpInput').value = ip;
+            document.getElementById('serverPortInput').value = port;
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function saveSettings() {
+            const ip = document.getElementById('serverIpInput').value.trim();
+            const port = document.getElementById('serverPortInput').value.trim();
+            if (ip) {
+                localStorage.setItem('serverIp', ip);
+                localStorage.setItem('serverPort', port || DEFAULT_PORT);
+                closeSettings();
+                getVolume(); // Test connection
+            }
+        }
+
+        // Haptic feedback using Capacitor
+        function haptic() {
+            try {
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) {
+                    window.Capacitor.Plugins.Haptics.impact({ style: 'Light' });
+                }
+            } catch (e) {}
+        }
+
+        // Visual + haptic feedback for button press
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.classList.add('flash');
+                    haptic();
+                }, { passive: true });
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('flash');
+                }, { passive: true });
+            });
+        });
+
+        function toggleExpand(page) {
+            const btn = document.getElementById(page + 'ExpandBtn');
+            const content = document.getElementById(page + 'Collapsible');
+            const pageEl = document.getElementById(page + 'Page');
+            btn.classList.toggle('expanded');
+            content.classList.toggle('expanded');
+            pageEl.classList.toggle('expanded');
+            btn.querySelector('span:first-child').textContent =
+                content.classList.contains('expanded') ? 'Less controls' : 'More controls';
+        }
+
+        async function sendKey(key) {
+            try {
+                const response = await fetch(`${getApiBase()}/input/key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: key })
+                });
+                if (response.ok) {
+                    showStatus('connected', `${key}`);
+                } else {
+                    showStatus('error', `Error`);
+                }
+            } catch (error) {
+                showStatus('error', `Offline`);
+            }
+        }
+
+        async function setVolume(value) {
+            document.getElementById('volumeValue').textContent = value;
+            try {
+                await fetch(`${getApiBase()}/audio/volume`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current: parseInt(value), muted: false })
+                });
+                showStatus('connected', `Vol: ${value}`);
+            } catch (error) {
+                showStatus('error', 'Offline');
+            }
+        }
+
+        async function setSource(id) {
+            try {
+                await fetch(`${getApiBase()}/sources/current`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: id })
+                });
+                showStatus('connected', `Source OK`);
+            } catch (error) {
+                showStatus('error', 'Offline');
+            }
+        }
+
+        async function getVolume() {
+            try {
+                const response = await fetch(`${getApiBase()}/audio/volume`);
+                const data = await response.json();
+                document.getElementById('volumeSlider').value = data.current;
+                document.getElementById('volumeValue').textContent = data.current;
+                showStatus('connected', `Connected`);
+            } catch (error) {
+                showStatus('error', 'Offline');
+            }
+        }
+
+        function showStatus(type, message) {
+            const status = document.getElementById('tvStatus');
+            status.className = `status ${type}`;
+            status.textContent = message;
+        }
+
+        getVolume();
+        setInterval(getVolume, 10000);
+    </script>
+</body>
+</html>
