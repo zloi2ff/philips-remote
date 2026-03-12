@@ -802,7 +802,8 @@
 
                 <div class="section">
                     <div class="section-title">Sources</div>
-                    <div class="sources">
+                    <div class="sources" id="sourcesGrid">
+                        <!-- Populated dynamically from /api/{v}/sources -->
                         <button class="btn" onclick="setSource(11)">TV</button>
                         <button class="btn" onclick="setSource(17)">SAT</button>
                         <button class="btn" onclick="setSource(28)">Game</button>
@@ -866,7 +867,8 @@
         }
 
         function getApiBase() {
-            return `${getServerUrl()}/api/1`;
+            const version = localStorage.getItem('tvApiVersion') || '1';
+            return `${getServerUrl()}/api/${version}`;
         }
 
         // --- TV Discovery & Configuration ---
@@ -881,12 +883,12 @@
             }
         }
 
-        async function saveConfig(ip, port) {
+        async function saveConfig(ip, port, apiVersion) {
             try {
                 await fetch(`${getServerUrl()}/config`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ip, port: port || 1925 })
+                    body: JSON.stringify({ ip, port: port || 1925, apiVersion: apiVersion || 1 })
                 });
             } catch {}
         }
@@ -907,10 +909,10 @@
 
                 if (data.tvs && data.tvs.length > 0) {
                     list.innerHTML = data.tvs.map(tv => `
-                        <div class="tv-item" onclick="selectTv('${tv.ip}', ${tv.port}, '${tv.name}', this, '${context}')">
+                        <div class="tv-item" onclick="selectTv('${tv.ip}', ${tv.port}, ${tv.apiVersion || 1}, '${tv.name}', this, '${context}')">
                             <div class="tv-item-info">
                                 <div class="tv-item-name">${tv.name || 'Philips TV'}</div>
-                                <div class="tv-item-ip">${tv.ip}:${tv.port}${tv.model ? ' — ' + tv.model : ''}</div>
+                                <div class="tv-item-ip">${tv.ip}:${tv.port}${tv.model ? ' — ' + tv.model : ''} · API v${tv.apiVersion || 1}</div>
                             </div>
                             <div class="tv-item-check">✓</div>
                         </div>
@@ -931,13 +933,14 @@
                 Scan Again`;
         }
 
-        async function selectTv(ip, port, name, el, context) {
+        async function selectTv(ip, port, apiVersion, name, el, context) {
             const listId = context === 'setup' ? 'setupTvList' : 'modalTvList';
             document.querySelectorAll(`#${listId} .tv-item`).forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
 
-            await saveConfig(ip, port);
+            await saveConfig(ip, port, apiVersion);
             localStorage.setItem('tvName', name || 'Philips TV');
+            localStorage.setItem('tvApiVersion', apiVersion || '1');
             document.getElementById('tvTitle').textContent = (name || 'PHILIPS TV').toUpperCase();
 
             if (context === 'setup') {
@@ -946,6 +949,7 @@
                 closeSettings();
             }
 
+            await loadTvCapabilities();
             startPolling();
         }
 
@@ -954,7 +958,7 @@
             const ip = document.getElementById(inputId).value.trim();
             if (!ip) return;
 
-            await saveConfig(ip, 1925);
+            await saveConfig(ip, 1925, 1);
 
             if (context === 'setup') {
                 document.getElementById('setupScreen').classList.remove('active');
@@ -962,6 +966,7 @@
                 closeSettings();
             }
 
+            await loadTvCapabilities();
             startPolling();
         }
 
@@ -1011,6 +1016,72 @@
                 }, { passive: true });
             });
         });
+
+        // --- TV Capabilities (dynamic sources + volume range) ---
+
+        function normalizeSources(data) {
+            // v6 Android TV: plain array [{id, name, type}]
+            if (Array.isArray(data)) {
+                return data.map(s => ({ id: s.id, name: s.name || s.id }));
+            }
+            // v1/v5: {sources: [...]} or {sources: {id: {name}}}
+            const raw = data.sources || data;
+            if (Array.isArray(raw)) {
+                return raw.map(s => ({ id: s.id, name: s.name || s.id }));
+            }
+            if (raw && typeof raw === 'object') {
+                return Object.entries(raw).map(([key, s]) => ({
+                    id:   typeof s === 'object' ? (s.id ?? parseInt(key)) : parseInt(key),
+                    name: typeof s === 'object' ? (s.name || key) : key,
+                }));
+            }
+            return [];
+        }
+
+        async function loadTvCapabilities() {
+            try {
+                // Load volume range
+                const volRes = await fetch(`${getApiBase()}/audio/volume`);
+                if (volRes.ok) {
+                    const vol = await volRes.json();
+                    const max = vol.max || 60;
+                    const slider = document.getElementById('volumeSlider');
+                    slider.max = max;
+                    slider.min = vol.min ?? 0;
+                    if (vol.current !== undefined) {
+                        slider.value = vol.current;
+                        document.getElementById('volumeValue').textContent = vol.current;
+                    }
+                }
+            } catch {}
+
+            try {
+                // Load sources dynamically
+                const srcRes = await fetch(`${getApiBase()}/sources`);
+                if (srcRes.ok) {
+                    const data    = await srcRes.json();
+                    const sources = normalizeSources(data);
+                    renderSources(sources);
+                }
+            } catch {}
+        }
+
+        function renderSources(sources) {
+            const grid = document.getElementById('sourcesGrid');
+            if (!sources.length) return;
+            grid.innerHTML = sources.map(s =>
+                `<button class="btn" onclick="setSource(${JSON.stringify(s.id)})">${s.name}</button>`
+            ).join('');
+            // Re-attach touch feedback for new buttons
+            grid.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('touchstart', function() {
+                    this.classList.add('flash'); haptic();
+                }, { passive: true });
+                btn.addEventListener('touchend', function() {
+                    this.classList.remove('flash');
+                }, { passive: true });
+            });
+        }
 
         // --- Remote Controls ---
 
@@ -1112,8 +1183,11 @@
         (async function init() {
             const config = await loadConfig();
             if (config && config.ip) {
+                // Sync API version from server into localStorage
+                if (config.apiVersion) localStorage.setItem('tvApiVersion', config.apiVersion);
                 const name = localStorage.getItem('tvName');
                 if (name) document.getElementById('tvTitle').textContent = name.toUpperCase();
+                await loadTvCapabilities();
                 startPolling();
             } else {
                 document.getElementById('setupScreen').classList.add('active');

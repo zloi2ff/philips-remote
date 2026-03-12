@@ -3,10 +3,12 @@
 Philips TV Remote Control Server
 Proxies requests to JointSpace API and serves web UI.
 Supports auto-discovery of Philips TVs on the local network.
+Supports JointSpace API versions 1 (HTTP) and 6 (HTTPS, Android TV).
 """
 
 import http.server
 import json
+import ssl
 import urllib.request
 import urllib.error
 import os
@@ -17,19 +19,29 @@ import threading
 API_PREFIX = '/api'
 JOINTSPACE_PORT = 1925
 TV_REQUEST_TIMEOUT = 5  # seconds
-SCAN_TIMEOUT = 1  # seconds per host during network scan
+SCAN_TIMEOUT = 1         # seconds per host during network scan
 
 # Configuration via environment variables
 SERVER_PORT = int(os.environ.get('SERVER_PORT', '8888'))
 
 # Mutable TV config (can be changed at runtime via /config endpoint)
 tv_config = {
-    'ip': os.environ.get('TV_IP', ''),
-    'port': int(os.environ.get('TV_PORT', str(JOINTSPACE_PORT)))
+    'ip':         os.environ.get('TV_IP', ''),
+    'port':       int(os.environ.get('TV_PORT', str(JOINTSPACE_PORT))),
+    'apiVersion': int(os.environ.get('TV_API_VERSION', '1')),
 }
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-WWW_DIR = os.path.join(SCRIPT_DIR, 'www')
+WWW_DIR    = os.path.join(SCRIPT_DIR, 'www')
+
+
+def _ssl_context():
+    """Return an SSL context that skips certificate verification.
+    Philips TVs use self-signed certificates for JointSpace v6 (HTTPS)."""
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
 
 
 def get_local_subnet():
@@ -47,26 +59,37 @@ def get_local_subnet():
 
 
 def check_tv(ip, port, timeout=SCAN_TIMEOUT):
-    """Check if a Philips TV responds at the given IP on JointSpace API."""
-    try:
-        url = f"http://{ip}:{port}/1/system"
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            data = json.loads(response.read())
-            return {
-                'ip': ip,
-                'port': port,
-                'name': data.get('name', 'Philips TV'),
-                'model': data.get('model', ''),
-            }
-    except Exception:
-        return None
+    """Check if a Philips TV responds at the given IP.
+    Tries API v1 (HTTP), v6 (HTTPS), v5 (HTTP) in order.
+    Returns device info dict with apiVersion field, or None."""
+    candidates = [
+        (1, 'http'),
+        (6, 'https'),
+        (5, 'http'),
+    ]
+    for api_version, scheme in candidates:
+        try:
+            url = f"{scheme}://{ip}:{port}/{api_version}/system"
+            req = urllib.request.Request(url)
+            ctx = _ssl_context() if scheme == 'https' else None
+            with urllib.request.urlopen(req, timeout=timeout, context=ctx) as response:
+                data = json.loads(response.read())
+                return {
+                    'ip':         ip,
+                    'port':       port,
+                    'apiVersion': api_version,
+                    'name':       data.get('name', 'Philips TV'),
+                    'model':      data.get('model', ''),
+                }
+        except Exception:
+            continue
+    return None
 
 
 def scan_network(subnet, port=JOINTSPACE_PORT):
     """Scan /24 subnet for Philips TVs. Returns list of found devices."""
     found = []
-    lock = threading.Lock()
+    lock  = threading.Lock()
 
     def scan_ip(ip):
         result = check_tv(ip, port)
@@ -77,7 +100,7 @@ def scan_network(subnet, port=JOINTSPACE_PORT):
     threads = []
     for i in range(1, 255):
         ip = f"{subnet}.{i}"
-        t = threading.Thread(target=scan_ip, args=(ip,), daemon=True)
+        t  = threading.Thread(target=scan_ip, args=(ip,), daemon=True)
         threads.append(t)
         t.start()
 
@@ -149,31 +172,33 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         self._send_json(tv_config)
 
     def _handle_set_config(self):
-        """Update TV IP/port configuration at runtime."""
+        """Update TV configuration at runtime."""
         body = json.loads(self._read_body())
-        if 'ip' in body:
-            tv_config['ip'] = body['ip']
-        if 'port' in body:
-            tv_config['port'] = int(body['port'])
+        if 'ip'         in body: tv_config['ip']         = body['ip']
+        if 'port'       in body: tv_config['port']       = int(body['port'])
+        if 'apiVersion' in body: tv_config['apiVersion'] = int(body['apiVersion'])
         self._send_json(tv_config)
 
     def _proxy_tv(self, method):
-        """Proxy an HTTP request to the Philips TV JointSpace API."""
+        """Proxy an HTTP/HTTPS request to the Philips TV JointSpace API."""
         if not tv_config['ip']:
             self._send_json({
                 'error': 'TV not configured. Use discovery or set IP manually.'
             }, 503)
             return
 
+        # v6+ uses HTTPS; older models use plain HTTP
+        scheme = 'https' if tv_config['apiVersion'] >= 6 else 'http'
         tv_path = self.path[len(API_PREFIX):]
-        tv_url = f"http://{tv_config['ip']}:{tv_config['port']}{tv_path}"
+        tv_url  = f"{scheme}://{tv_config['ip']}:{tv_config['port']}{tv_path}"
+        ctx     = _ssl_context() if scheme == 'https' else None
 
         try:
             body = self._read_body() if method == 'POST' else None
-            req = urllib.request.Request(tv_url, data=body, method=method)
+            req  = urllib.request.Request(tv_url, data=body, method=method)
             req.add_header('Content-Type', 'application/json')
 
-            with urllib.request.urlopen(req, timeout=TV_REQUEST_TIMEOUT) as response:
+            with urllib.request.urlopen(req, timeout=TV_REQUEST_TIMEOUT, context=ctx) as response:
                 data = response.read()
                 self.send_response(response.status)
                 self.send_header('Content-Type',
@@ -203,7 +228,7 @@ def main():
     print("Philips TV Remote Server")
     print("========================")
     if tv_config['ip']:
-        print(f"TV: {tv_config['ip']}:{tv_config['port']}")
+        print(f"TV: {tv_config['ip']}:{tv_config['port']} (API v{tv_config['apiVersion']})")
     else:
         print("TV: not configured (use web UI to discover)")
     print(f"Server: http://localhost:{SERVER_PORT}")
