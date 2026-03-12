@@ -289,9 +289,25 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             tv_config['ip'] = ip
 
         if 'port' in body:
-            tv_config['port'] = int(body['port'])
+            try:
+                port = int(body['port'])
+            except (ValueError, TypeError):
+                self._send_json({'error': 'Invalid port'}, 400)
+                return
+            if not (1 <= port <= 65535):
+                self._send_json({'error': 'Port must be 1–65535'}, 400)
+                return
+            tv_config['port'] = port
         if 'apiVersion' in body:
-            tv_config['apiVersion'] = int(body['apiVersion'])
+            try:
+                api_version = int(body['apiVersion'])
+            except (ValueError, TypeError):
+                self._send_json({'error': 'Invalid apiVersion'}, 400)
+                return
+            if api_version not in (1, 5, 6):
+                self._send_json({'error': 'apiVersion must be 1, 5, or 6'}, 400)
+                return
+            tv_config['apiVersion'] = api_version
 
         self._send_json(tv_config)
 
