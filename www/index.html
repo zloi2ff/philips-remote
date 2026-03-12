@@ -1251,8 +1251,9 @@
                 config?.ip ? `${config.ip}:${config.port} · API v${config.apiVersion || 1}` : 'Tap Change to configure';
 
             try {
-                const ver = window.Capacitor?.PluginHeaders?.find?.(p => p.name === 'Device')?.version || '1.0.0';
-                document.getElementById('appVersionLabel').textContent = ver;
+                const App = getPlugin('App');
+                const info = App ? await App.getInfo() : null;
+                document.getElementById('appVersionLabel').textContent = info?.version || '1.0.0';
             } catch {}
 
             syncThemeSegmented();
@@ -1557,8 +1558,14 @@
             const ip = document.getElementById(inputId).value.trim();
             if (!ip) return;
 
-            await saveConfig(ip, 1925, 1);
-            localStorage.setItem('tvApiVersion', '1');
+            // Auto-detect API version by probing the TV directly
+            const detected = IS_CAPACITOR ? await probeTvDirect(ip) : null;
+            const port       = detected?.port       || 1925;
+            const apiVersion = detected?.apiVersion || 1;
+            const name       = detected?.name       || 'Philips TV';
+
+            await saveConfig(ip, port, apiVersion);
+            localStorage.setItem('tvName', name);
 
             if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
             else closeTvModal();
