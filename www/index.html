@@ -1309,7 +1309,6 @@
             if (config?.ip) {
                 const name = localStorage.getItem('tvName') || 'Philips TV';
                 infoEl.innerHTML = `Connected to: <strong>${escHtml(name)}</strong> (${escHtml(config.ip)}:${escHtml(String(config.port))})`;
-
                 infoEl.style.display = 'block';
             } else {
                 infoEl.style.display = 'none';
@@ -1318,6 +1317,9 @@
             document.getElementById('modalTvList').innerHTML = '';
             document.getElementById('manualIpInput').value = config?.ip || '';
             document.getElementById('tvModal').classList.add('active');
+
+            // Auto-start scan when modal opens
+            startDiscovery('modal');
         }
 
         function closeTvModal() {
@@ -1397,6 +1399,20 @@
                         body: JSON.stringify({ ip, port: port || 1925, apiVersion: apiVersion || 1 }),
                     });
                 } catch {}
+            }
+            // Sync TV config to App Group UserDefaults so the iOS widget can read it.
+            // TvConfigHandler.swift registered via CAPBridgeViewController.webView in AppDelegate.
+            if (IS_CAPACITOR) {
+                try {
+                    window.webkit.messageHandlers.tvConfig.postMessage({
+                        ip,
+                        port: port || 1925,
+                        apiVersion: apiVersion || 1,
+                    });
+                    console.log('[saveConfig] tvConfig message sent');
+                } catch (e) {
+                    console.warn('[saveConfig] tvConfig handler not ready:', e?.message || e);
+                }
             }
         }
 
@@ -1663,12 +1679,22 @@
         }
 
         async function sendKey(key) {
+            const base = getApiBase();
+            if (!base) { showStatus('error', 'Not configured'); return; }
+            const doSend = () => fetch(base + '/input/key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key }),
+            });
             try {
-                const response = await fetch(`${getApiBase()}/input/key`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key }),
-                });
+                let response;
+                try {
+                    response = await doSend();
+                } catch {
+                    // Retry once after 300ms (CapacitorHttp may need a moment on first use)
+                    await new Promise(r => setTimeout(r, 300));
+                    response = await doSend();
+                }
                 showStatus(response.ok ? 'connected' : 'error', response.ok ? key : 'Error');
             } catch {
                 showStatus('error', 'Offline');
@@ -1752,6 +1778,8 @@
 
             if (config?.ip) {
                 if (config.apiVersion) localStorage.setItem('tvApiVersion', config.apiVersion);
+                // Sync existing config to App Group UserDefaults so widget always has latest data.
+                await saveConfig(config.ip, parseInt(config.port) || 1925, parseInt(config.apiVersion) || 1);
                 const name = localStorage.getItem('tvName');
                 if (name) document.getElementById('tvTitle').textContent = name.toUpperCase();
 

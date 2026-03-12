@@ -1,6 +1,6 @@
 # Philips TV Remote
 
-Web-based remote control for Philips Smart TV (JointSpace API v1). Available as web app and native iOS app.
+Web-based remote control for Philips Smart TV (JointSpace API v1/v5/v6). Available as web app and native iOS app with Home Screen widget.
 
 **English** | [Українська](README.uk.md)
 
@@ -9,6 +9,7 @@ Web-based remote control for Philips Smart TV (JointSpace API v1). Available as 
   <img src="screenshot-expanded.png" width="280" alt="Expanded">
 </p>
 
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![Remote](https://img.shields.io/badge/TV-Philips%206158-blue)
 ![Python](https://img.shields.io/badge/Python-3.x-green)
 ![Capacitor](https://img.shields.io/badge/Capacitor-8.x-blue)
@@ -33,6 +34,7 @@ Web-based remote control for Philips Smart TV (JointSpace API v1). Available as 
 - Visual button feedback with haptic (iOS)
 - PWA support (add to home screen on iOS/Android)
 - Native iOS app (Capacitor)
+- **Home Screen widget** — Vol+/Vol-/Mute/Standby controls without opening the app (iOS 17+, Liquid Glass on iOS 26+)
 
 ## Installation
 

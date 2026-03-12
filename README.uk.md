@@ -1,7 +1,8 @@
 # Philips TV Remote
 
-Веб-пульт для телевізора Philips Smart TV (JointSpace API v1). Доступний як веб-додаток та нативний iOS застосунок.
+Веб-пульт для телевізора Philips Smart TV (JointSpace API v1/v5/v6). Доступний як веб-додаток та нативний iOS застосунок з віджетом на домашньому екрані.
 
+![Version](https://img.shields.io/badge/version-1.1-blue)
 ![Remote](https://img.shields.io/badge/TV-Philips%206158-blue)
 ![Python](https://img.shields.io/badge/Python-3.x-green)
 ![Capacitor](https://img.shields.io/badge/Capacitor-8.x-blue)
@@ -33,6 +34,7 @@
 - Візуальний відгук з вібрацією (iOS)
 - PWA підтримка (додавання на домашній екран iOS/Android)
 - Нативний iOS застосунок (Capacitor)
+- **Віджет на домашньому екрані** — Vol+/Vol-/Mute/Standby без відкриття додатку (iOS 17+, Liquid Glass на iOS 26+)
 
 ## Встановлення
 
