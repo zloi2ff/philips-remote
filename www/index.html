@@ -2,7 +2,7 @@
 <html lang="uk" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <title>Philips Remote</title>
 
     <!-- PWA / iOS -->
@@ -119,11 +119,12 @@
         .page {
             display: none;
             width: 100%;
-            height: 100vh;
-            max-height: 100vh;
+            height: 100dvh;
+            max-height: 100dvh;
             overflow-y: hidden;
             padding: 10px 16px 40px;
-            padding-top: calc(env(safe-area-inset-top, 10px) + 5px);
+            padding-top: max(env(safe-area-inset-top), 10px);
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
             flex-direction: column;
             justify-content: space-between;
             background: var(--bg-primary);
@@ -134,7 +135,7 @@
         .page.expanded {
             overflow-y: auto;
             justify-content: flex-start;
-            padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 20px);
+            padding-bottom: max(calc(env(safe-area-inset-bottom) + 20px), 40px);
         }
 
         .main-content {
@@ -553,13 +554,14 @@
         }
 
         .settings-page.active { transform: translateX(0); }
+        .settings-page.swiping { transition: none; }
 
         .settings-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 12px 16px 8px;
-            padding-top: calc(env(safe-area-inset-top, 10px) + 12px);
+            padding-top: max(env(safe-area-inset-top), 12px);
             background: var(--settings-bg);
             border-bottom: 1px solid var(--settings-sep);
         }
@@ -591,7 +593,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 24px 16px;
-            padding-bottom: calc(env(safe-area-inset-bottom, 20px) + 24px);
+            padding-bottom: max(calc(env(safe-area-inset-bottom) + 24px), 44px);
         }
 
         .settings-section { margin-bottom: 28px; }
@@ -723,6 +725,9 @@
     <div class="setup-screen" id="setupScreen">
         <h1>Philips Remote</h1>
         <p>Find your TV on the network or enter IP manually</p>
+        <p style="font-size:12px;color:var(--text-secondary);margin:-16px 0 24px 0;">
+            ⚠️ Make sure your phone is connected to the <strong>2.4 GHz</strong> Wi-Fi network — Philips TVs are only visible on 2.4 GHz.
+        </p>
 
         <button class="discover-btn" id="setupScanBtn" onclick="startDiscovery('setup')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -757,9 +762,9 @@
                     <div id="tvStatus" class="status connected">Connected</div>
                 </div>
                 <button class="btn settings-btn" onclick="openSettingsPage()">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
                     </svg>
                 </button>
             </div>
@@ -1046,15 +1051,16 @@
         }
 
         // ============================================================
-        // MONETIZATION CONFIG — fill in before submitting to App Store
+        // MONETIZATION CONFIG
+        // See RELEASE_CHECKLIST.md for step-by-step instructions on filling in real keys.
         // ============================================================
 
         const MONETIZATION = {
-            admobBannerId:  'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // TODO: replace with real iOS Banner Unit ID
-            rcApiKeyIos:    'appl_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',  // TODO: replace with RevenueCat iOS API key
-            entitlementId:  'pro',
-            productId:      'remove_ads',                             // must match App Store Connect product ID
-            appStoreId:     'XXXXXXXXXX',                             // TODO: replace with your numeric App Store ID
+            admobBannerId:  'ca-app-pub-3940256099942544/2934735716', // ← replace: AdMob Banner Unit ID (see RELEASE_CHECKLIST.md)
+            rcApiKeyIos:    'appl_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',  // ← replace: RevenueCat iOS API key
+            entitlementId:  'pro',                                    // RevenueCat entitlement name — keep as-is
+            productId:      'remove_ads',                             // App Store Connect IAP product ID — keep as-is
+            appStoreId:     'XXXXXXXXXX',                             // ← replace: numeric App Store ID (after first submission)
             privacyUrl:     'https://github.com/zloi2ff/philips-remote/blob/master/PRIVACY.md',
             bugsUrl:        'https://github.com/zloi2ff/philips-remote/issues/new',
         };
@@ -1258,6 +1264,39 @@
             document.getElementById('settingsPage').classList.remove('active');
         }
 
+        // Swipe-right to close settings page
+        (function() {
+            const page = document.getElementById('settingsPage');
+            let startX = 0, startY = 0, dragging = false;
+            const THRESHOLD = 80, MAX_Y_DRIFT = 60;
+
+            page.addEventListener('touchstart', e => {
+                if (e.touches[0].clientX > 40) return; // only from left edge
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                dragging = true;
+            }, { passive: true });
+
+            page.addEventListener('touchmove', e => {
+                if (!dragging) return;
+                const dx = e.touches[0].clientX - startX;
+                const dy = Math.abs(e.touches[0].clientY - startY);
+                if (dy > MAX_Y_DRIFT) { dragging = false; page.style.transform = ''; page.classList.remove('swiping'); return; }
+                if (dx < 0) return;
+                page.classList.add('swiping');
+                page.style.transform = `translateX(${dx}px)`;
+            }, { passive: true });
+
+            page.addEventListener('touchend', e => {
+                if (!dragging) return;
+                dragging = false;
+                page.classList.remove('swiping');
+                page.style.transform = '';
+                const dx = e.changedTouches[0].clientX - startX;
+                if (dx > THRESHOLD) closeSettingsPage();
+            }, { passive: true });
+        })();
+
         // ============================================================
         // TV DISCOVERY MODAL
         // ============================================================
@@ -1304,7 +1343,12 @@
         // SERVER CONFIG
         // ============================================================
 
+        // In Capacitor (iOS) the app talks directly to the TV — no proxy server needed.
+        // In browser (served by server.py), relative URLs proxy through the Python server.
+        const IS_CAPACITOR = window.location.protocol === 'capacitor:' || !!window.Capacitor?.isNative;
+
         function getServerUrl() {
+            if (IS_CAPACITOR) return null;
             if (window.location.protocol !== 'file:') return '';
             const ip   = localStorage.getItem('serverIp');
             const port = localStorage.getItem('serverPort') || '8888';
@@ -1312,11 +1356,27 @@
         }
 
         function getApiBase() {
-            const version = localStorage.getItem('tvApiVersion') || '1';
+            const version = parseInt(localStorage.getItem('tvApiVersion') || '1');
+            if (IS_CAPACITOR) {
+                const ip   = localStorage.getItem('tvIp');
+                const port = localStorage.getItem('tvPort') || '1925';
+                if (!ip) return null;
+                const scheme = version >= 6 ? 'https' : 'http';
+                return `${scheme}://${ip}:${port}/${version}`;
+            }
             return `${getServerUrl()}/api/${version}`;
         }
 
         async function loadConfig() {
+            if (IS_CAPACITOR) {
+                const ip = localStorage.getItem('tvIp');
+                if (!ip) return null;
+                return {
+                    ip,
+                    port: parseInt(localStorage.getItem('tvPort') || '1925'),
+                    apiVersion: parseInt(localStorage.getItem('tvApiVersion') || '1'),
+                };
+            }
             try {
                 const res = await fetch(`${getServerUrl()}/config`);
                 if (!res.ok) return null;
@@ -1325,18 +1385,114 @@
         }
 
         async function saveConfig(ip, port, apiVersion) {
-            try {
-                await fetch(`${getServerUrl()}/config`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ip, port: port || 1925, apiVersion: apiVersion || 1 }),
-                });
-            } catch {}
+            localStorage.setItem('tvIp', ip);
+            localStorage.setItem('tvPort', String(port || 1925));
+            localStorage.setItem('tvApiVersion', String(apiVersion || 1));
+            if (!IS_CAPACITOR) {
+                try {
+                    await fetch(`${getServerUrl()}/config`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ip, port: port || 1925, apiVersion: apiVersion || 1 }),
+                    });
+                } catch {}
+            }
+        }
+
+        // Try to get local device IP via WebRTC
+        function getLocalIpViaWebRTC() {
+            return new Promise(resolve => {
+                try {
+                    const pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel('');
+                    pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => resolve(null));
+                    pc.onicecandidate = e => {
+                        if (!e?.candidate?.candidate) return;
+                        const m = /([0-9]{1,3}(?:\.[0-9]{1,3}){3})/.exec(e.candidate.candidate);
+                        if (m && !m[1].startsWith('127.')) { resolve(m[1]); pc.close(); }
+                    };
+                    setTimeout(() => resolve(null), 2500);
+                } catch { resolve(null); }
+            });
+        }
+
+        // Probe one IP directly for a Philips TV (v1 HTTP, v6 HTTPS, v5 HTTP)
+        async function probeTvDirect(ip, port = 1925) {
+            for (const [v, scheme] of [[1,'http'],[6,'https'],[5,'http']]) {
+                try {
+                    const ctrl = new AbortController();
+                    setTimeout(() => ctrl.abort(), 1500);
+                    const r = await fetch(`${scheme}://${ip}:${port}/${v}/system`, { signal: ctrl.signal });
+                    if (!r.ok) continue;
+                    const d = await r.json();
+                    return { ip, port, apiVersion: v, name: d.name || 'Philips TV', model: d.model || '' };
+                } catch {}
+            }
+            return null;
+        }
+
+        // Scan /24 subnet directly from the app in parallel batches
+        async function scanSubnetDirect(subnet, port = 1925) {
+            const found = [];
+            const ips = Array.from({ length: 254 }, (_, i) => `${subnet}.${i + 1}`);
+            const batch = 30;
+            for (let i = 0; i < ips.length; i += batch) {
+                const results = await Promise.all(ips.slice(i, i + batch).map(ip => probeTvDirect(ip, port)));
+                results.forEach(r => r && found.push(r));
+            }
+            return found;
+        }
+
+        // Scan multiple common subnets in parallel (fallback when local IP unknown)
+        async function scanCommonSubnets(port = 1925) {
+            const subnets = ['192.168.1','192.168.0','192.168.31','192.168.100',
+                             '10.0.0','10.0.1','10.1.1','172.16.0'];
+            const results = await Promise.all(subnets.map(s => scanSubnetDirect(s, port)));
+            return results.flat();
+        }
+
+        // Get subnets to scan: WebRTC first, fallback to common subnets
+        async function getSubnetsToScan() {
+            const localIp = await getLocalIpViaWebRTC();
+            if (localIp) {
+                const parts = localIp.split('.');
+                return [`${parts[0]}.${parts[1]}.${parts[2]}`];
+            }
+            // WebRTC failed — return null to trigger common-subnets fallback
+            return null;
         }
 
         // ============================================================
         // TV DISCOVERY
         // ============================================================
+
+        // Discovered TVs stored here so onclick can reference by index (avoids quote escaping issues)
+        const _discoveredTvs = {};
+
+        function renderTvList(list, tvs, context) {
+            _discoveredTvs[context] = tvs;
+            if (tvs.length > 0) {
+                list.innerHTML = tvs.map((tv, i) => {
+                    const modelPart = tv.model ? ` — ${escHtml(tv.model)}` : '';
+                    return `
+                    <div class="tv-item" onclick="selectTvByIndex(${i}, this, '${context}')">
+                        <div class="tv-item-info">
+                            <div class="tv-item-name">${escHtml(tv.name || 'Philips TV')}</div>
+                            <div class="tv-item-ip">${escHtml(tv.ip)}:${escHtml(String(tv.port))}${modelPart} · API v${escHtml(String(tv.apiVersion || 1))}</div>
+                        </div>
+                        <div class="tv-item-check">✓</div>
+                    </div>`;
+                }).join('');
+            } else {
+                list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:12px;">No TVs found on the network</div>';
+            }
+        }
+
+        function selectTvByIndex(i, el, context) {
+            const tv = (_discoveredTvs[context] || [])[i];
+            if (!tv) return;
+            selectTv(tv.ip, tv.port, tv.apiVersion || 1, tv.name || 'Philips TV', el, context);
+        }
 
         async function startDiscovery(context) {
             const btnId  = context === 'setup' ? 'setupScanBtn' : 'modalScanBtn';
@@ -1349,36 +1505,24 @@
             list.innerHTML = '';
 
             try {
-                const res  = await fetch(`${getServerUrl()}/discover`);
-                const data = await res.json();
-
-                if (data.tvs?.length > 0) {
-                    list.innerHTML = data.tvs.map(tv => {
-                        // Use JSON.stringify for onclick args to safely handle
-                        // any special characters in IP / name strings (XSS prevention)
-                        const onclickArgs = [
-                            JSON.stringify(tv.ip),
-                            tv.port,
-                            tv.apiVersion || 1,
-                            JSON.stringify(tv.name || 'Philips TV'),
-                            'this',
-                            JSON.stringify(context),
-                        ].join(',');
-                        const modelPart = tv.model ? ` — ${escHtml(tv.model)}` : '';
-                        return `
-                        <div class="tv-item" onclick="selectTv(${onclickArgs})">
-                            <div class="tv-item-info">
-                                <div class="tv-item-name">${escHtml(tv.name || 'Philips TV')}</div>
-                                <div class="tv-item-ip">${escHtml(tv.ip)}:${escHtml(String(tv.port))}${modelPart} · API v${escHtml(String(tv.apiVersion || 1))}</div>
-                            </div>
-                            <div class="tv-item-check">✓</div>
-                        </div>
-                    `}).join('');
+                let tvs;
+                if (IS_CAPACITOR) {
+                    // Direct scan from iOS — no proxy server needed
+                    const subnets = await getSubnetsToScan();
+                    if (subnets) {
+                        tvs = (await Promise.all(subnets.map(s => scanSubnetDirect(s)))).flat();
+                    } else {
+                        // WebRTC failed — scan all common home network subnets
+                        tvs = await scanCommonSubnets();
+                    }
                 } else {
-                    list.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:12px;padding:12px;">No TVs found on the network</div>';
+                    const res  = await fetch(`${getServerUrl()}/discover`);
+                    const data = await res.json();
+                    tvs = data.tvs || [];
                 }
-            } catch {
-                list.innerHTML = '<div style="text-align:center;color:var(--danger);font-size:12px;padding:12px;">Scan failed</div>';
+                renderTvList(list, tvs, context);
+            } catch (err) {
+                list.innerHTML = `<div style="text-align:center;color:var(--danger);font-size:12px;padding:12px;">Scan failed: ${escHtml(String(err?.message || err))}</div>`;
             }
 
             btn.disabled = false;

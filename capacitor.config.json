@@ -3,9 +3,13 @@
   "appName": "Philips Remote",
   "webDir": "www",
   "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
     "AdMob": {
-      "appId": "ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX",
-      "initializeForTesting": false
+      "_comment": "Replace appId with real AdMob App ID and set initializeForTesting to false before App Store release. See RELEASE_CHECKLIST.md",
+      "appId": "ca-app-pub-3940256099942544~1458002511",
+      "initializeForTesting": true
     }
   }
 }

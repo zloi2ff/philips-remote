@@ -54,11 +54,9 @@
 	</dict>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Потрібен доступ до локальної мережі для керування телевізором Philips</string>
-	<!-- AdMob: replace with your real App ID from AdMob console -->
+	<!-- AdMob App ID (test ID for development; replace with real ID before App Store release) -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-XXXXXXXXXXXXXXXX~XXXXXXXXXX</string>
-	<key>GADIsAdManagerApp</key>
-	<true/>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<!-- App Tracking Transparency (iOS 14.5+, required by Apple for ads) -->
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This identifier will be used to show you relevant ads. You can remove ads permanently with a one-time purchase in Settings.</string>
