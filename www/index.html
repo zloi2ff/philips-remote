@@ -1434,6 +1434,7 @@
         }
 
         // Probe one IP directly for a Philips TV (v1 HTTP, v6 HTTPS, v5 HTTP)
+        // AbortController works with CapacitorHttp GET: signal is passed to WKWebView fetch.
         async function probeTvDirect(ip, port = 1925) {
             for (const [v, scheme] of [[1,'http'],[6,'https'],[5,'http']]) {
                 try {
@@ -1442,6 +1443,7 @@
                     const r = await fetch(`${scheme}://${ip}:${port}/${v}/system`, { signal: ctrl.signal });
                     if (!r.ok) continue;
                     const d = await r.json();
+                    console.log(`[scan] Found TV at ${ip}:${port} v${v}`);
                     return { ip, port, apiVersion: v, name: d.name || 'Philips TV', model: d.model || '' };
                 } catch {}
             }
@@ -1450,6 +1452,7 @@
 
         // Scan /24 subnet directly from the app in parallel batches
         async function scanSubnetDirect(subnet, port = 1925) {
+            console.log(`[scan] Scanning ${subnet}.* ...`);
             const found = [];
             const ips = Array.from({ length: 254 }, (_, i) => `${subnet}.${i + 1}`);
             const batch = 30;
@@ -1457,15 +1460,22 @@
                 const results = await Promise.all(ips.slice(i, i + batch).map(ip => probeTvDirect(ip, port)));
                 results.forEach(r => r && found.push(r));
             }
+            console.log(`[scan] ${subnet}.* done, found ${found.length} TV(s)`);
             return found;
         }
 
-        // Scan multiple common subnets in parallel (fallback when local IP unknown)
+        // Scan multiple common subnets sequentially (fallback when local IP unknown)
         async function scanCommonSubnets(port = 1925) {
-            const subnets = ['192.168.1','192.168.0','192.168.31','192.168.100',
+            const subnets = ['192.168.31','192.168.1','192.168.0','192.168.100',
                              '10.0.0','10.0.1','10.1.1','172.16.0'];
-            const results = await Promise.all(subnets.map(s => scanSubnetDirect(s, port)));
-            return results.flat();
+            console.log('[scan] WebRTC failed, scanning common subnets:', subnets.join(', '));
+            const found = [];
+            for (const s of subnets) {
+                const res = await scanSubnetDirect(s, port);
+                found.push(...res);
+                if (found.length > 0) break; // stop as soon as first TV found
+            }
+            return found;
         }
 
         // Get subnets to scan: WebRTC first, fallback to common subnets
@@ -1521,17 +1531,24 @@
             btn.innerHTML = '<span class="spinner"></span> Scanning...';
             list.innerHTML = '';
 
+            const dbg = (msg) => {
+                list.innerHTML = `<div style="text-align:center;color:var(--text-secondary);font-size:11px;padding:8px;font-family:monospace;">${escHtml(msg)}</div>`;
+            };
+
             try {
                 let tvs;
                 if (IS_CAPACITOR) {
-                    // Direct scan from iOS — no proxy server needed
+                    dbg('Getting local IP via WebRTC...');
                     const subnets = await getSubnetsToScan();
+                    console.log('[discovery] IS_CAPACITOR=true, subnets=', subnets);
                     if (subnets) {
+                        dbg(`Scanning ${subnets[0]}.0/24...`);
                         tvs = (await Promise.all(subnets.map(s => scanSubnetDirect(s)))).flat();
                     } else {
-                        // WebRTC failed — scan all common home network subnets
+                        dbg('WebRTC failed. Scanning common subnets...');
                         tvs = await scanCommonSubnets();
                     }
+                    console.log('[discovery] Found TVs:', tvs.length, tvs);
                 } else {
                     const res  = await fetch(`${getServerUrl()}/discover`);
                     const data = await res.json();
