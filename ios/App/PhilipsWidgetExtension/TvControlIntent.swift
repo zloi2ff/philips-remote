@@ -38,7 +38,8 @@ private enum TvSender {
             throw TvError.notConfigured
         }
 
-        let urlString = "http://\(config.ip):\(config.port)/\(config.apiVersion)/input/key"
+        let scheme = config.apiVersion >= 6 ? "https" : "http"
+        let urlString = "\(scheme)://\(config.ip):\(config.port)/\(config.apiVersion)/input/key"
         guard let url = URL(string: urlString) else {
             throw TvError.invalidURL
         }

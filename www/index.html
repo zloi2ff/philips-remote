@@ -939,7 +939,7 @@
                             <div class="settings-row-title" id="settingsTvName">No TV Connected</div>
                             <div class="settings-row-subtitle" id="settingsTvIp">Tap Change to configure</div>
                         </div>
-                        <button class="settings-row-action" onclick="closeSettingsPage(); openTvModal()">Change</button>
+                        <button class="settings-row-action" onclick="closeSettingsPage(); setTimeout(openTvModal, 360)">Change</button>
                     </div>
                 </div>
             </div>
@@ -1763,6 +1763,7 @@
             for (let i = 0; i < ips.length; i += batch) {
                 const results = await Promise.all(ips.slice(i, i + batch).map(ip => probeTvDirect(ip, port)));
                 results.forEach(r => r && found.push(r));
+                if (found.length > 0) break; // stop scanning once TV is found
             }
             console.log(`[scan] ${subnet}.* done, found ${found.length} TV(s)`);
             return found;
@@ -1884,14 +1885,39 @@
             // v6 TVs require Digest Auth. If credentials are missing, start pairing.
             if (IS_CAPACITOR && apiVersion >= 6 && !_getTvCredentials(ip)) {
                 await startPairing(ip, port, async () => {
-                    await loadTvCapabilities();
-                    startPolling();
+                    await _postConnectLoad();
                 });
-                return; // rest of connect runs from pairing callback
+                return;
             }
 
+            await _postConnectLoad();
+        }
+
+        // After connecting: show "Connecting...", wait for CapacitorHttp pool to clear
+        // (scan leaves ~250 in-flight requests), then load capabilities with retries.
+        async function _postConnectLoad() {
+            showStatus('connecting', 'Connecting...');
+            // Give CapacitorHttp URLSession pool time to drain after subnet scan
+            await new Promise(r => setTimeout(r, 1500));
             await loadTvCapabilities();
-            startPolling();
+            // Retry getVolume up to 5× with 2s intervals if first attempt fails
+            let attempts = 0;
+            const tryConnect = async () => {
+                try {
+                    const r = await apiFetch(`${getApiBase()}/audio/volume`);
+                    if (r.ok) {
+                        const d = await r.json();
+                        document.getElementById('volumeSlider').value = d.current ?? d.current;
+                        document.getElementById('volumeValue').textContent = d.current ?? '';
+                        showStatus('connected', 'Connected');
+                        startPolling();
+                        return;
+                    }
+                } catch {}
+                if (++attempts < 5) setTimeout(tryConnect, 2000);
+                else { showStatus('error', 'Offline'); startPolling(); }
+            };
+            tryConnect();
         }
 
         async function selectTv(ip, port, apiVersion, name, el, context) {

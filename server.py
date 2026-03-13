@@ -161,7 +161,7 @@ def scan_network(subnet: str, port: int = JOINTSPACE_PORT) -> list[dict]:
         t.start()
 
     for t in threads:
-        t.join(timeout=SCAN_TIMEOUT + 2)
+        t.join(timeout=SCAN_TIMEOUT * 4 + 1)
 
     return found
 
