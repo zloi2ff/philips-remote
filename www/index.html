@@ -896,6 +896,24 @@
         </div>
     </div>
 
+    <!-- PIN Pairing Modal (shown when v6 TV requires pairing) -->
+    <div class="modal-overlay" id="pairModal">
+        <div class="modal">
+            <h2>Pair with TV</h2>
+            <p id="pairModalMsg" style="font-size:13px;color:var(--text-secondary);text-align:center;margin:-8px 0 20px 0;">
+                A PIN code will appear on your TV screen. Enter it below to complete pairing.
+            </p>
+            <label>PIN Code</label>
+            <input type="text" id="pairPinInput" placeholder="1234" inputmode="numeric"
+                   maxlength="8" style="letter-spacing:4px;text-align:center;font-size:22px;">
+            <div id="pairError" style="display:none;color:var(--danger);font-size:12px;text-align:center;margin:-8px 0 12px 0;"></div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="cancelPairing()">Cancel</button>
+                <button class="btn primary" id="pairBtn" onclick="submitPairing()">Pair</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Page -->
     <div class="settings-page" id="settingsPage">
         <div class="settings-header">
@@ -1343,6 +1361,278 @@
         }
 
         // ============================================================
+        // MD5 (inline — no external library; required for Digest Auth)
+        // Based on RFC 1321, optimised for browser/WKWebView.
+        // ============================================================
+
+        function md5(str) {
+            function safeAdd(x, y) { const lsw=(x&0xffff)+(y&0xffff); return (((x>>16)+(y>>16)+(lsw>>16))<<16)|(lsw&0xffff); }
+            function bitRotateLeft(num, cnt) { return (num<<cnt)|(num>>>(32-cnt)); }
+            function md5cmn(q,a,b,x,s,t) { return safeAdd(bitRotateLeft(safeAdd(safeAdd(a,q),safeAdd(x,t)),s),b); }
+            function md5ff(a,b,c,d,x,s,t) { return md5cmn((b&c)|((~b)&d),a,b,x,s,t); }
+            function md5gg(a,b,c,d,x,s,t) { return md5cmn((b&d)|(c&(~d)),a,b,x,s,t); }
+            function md5hh(a,b,c,d,x,s,t) { return md5cmn(b^c^d,a,b,x,s,t); }
+            function md5ii(a,b,c,d,x,s,t) { return md5cmn(c^(b|(~d)),a,b,x,s,t); }
+            const utf8 = unescape(encodeURIComponent(str));
+            const len8 = utf8.length;
+            const m32  = [];
+            for (let i=0;i<len8;i++) m32[i>>2]=(m32[i>>2]||0)|(utf8.charCodeAt(i)<<((i%4)*8));
+            m32[len8>>2]=(m32[len8>>2]||0)|(0x80<<((len8%4)*8));
+            m32[14+(((len8+8)>>6)<<4)]= len8*8;
+            let [a,b,c,d]=[1732584193,-271733879,-1732584194,271733878];
+            for (let i=0;i<m32.length;i+=16){
+                const [oa,ob,oc,od]=[a,b,c,d];
+                a=md5ff(a,b,c,d,m32[i+0],7,-680876936); d=md5ff(d,a,b,c,m32[i+1],12,-389564586); c=md5ff(c,d,a,b,m32[i+2],17,606105819); b=md5ff(b,c,d,a,m32[i+3],22,-1044525330);
+                a=md5ff(a,b,c,d,m32[i+4],7,-176418897); d=md5ff(d,a,b,c,m32[i+5],12,1200080426); c=md5ff(c,d,a,b,m32[i+6],17,-1473231341); b=md5ff(b,c,d,a,m32[i+7],22,-45705983);
+                a=md5ff(a,b,c,d,m32[i+8],7,1770035416); d=md5ff(d,a,b,c,m32[i+9],12,-1958414417); c=md5ff(c,d,a,b,m32[i+10],17,-42063); b=md5ff(b,c,d,a,m32[i+11],22,-1990404162);
+                a=md5ff(a,b,c,d,m32[i+12],7,1804603682); d=md5ff(d,a,b,c,m32[i+13],12,-40341101); c=md5ff(c,d,a,b,m32[i+14],17,-1502002290); b=md5ff(b,c,d,a,m32[i+15],22,1236535329);
+                a=md5gg(a,b,c,d,m32[i+1],5,-165796510); d=md5gg(d,a,b,c,m32[i+6],9,-1069501632); c=md5gg(c,d,a,b,m32[i+11],14,643717713); b=md5gg(b,c,d,a,m32[i+0],20,-373897302);
+                a=md5gg(a,b,c,d,m32[i+5],5,-701558691); d=md5gg(d,a,b,c,m32[i+10],9,38016083); c=md5gg(c,d,a,b,m32[i+15],14,-660478335); b=md5gg(b,c,d,a,m32[i+4],20,-405537848);
+                a=md5gg(a,b,c,d,m32[i+9],5,568446438); d=md5gg(d,a,b,c,m32[i+14],9,-1019803690); c=md5gg(c,d,a,b,m32[i+3],14,-187363961); b=md5gg(b,c,d,a,m32[i+8],20,1163531501);
+                a=md5gg(a,b,c,d,m32[i+13],5,-1444681467); d=md5gg(d,a,b,c,m32[i+2],9,-51403784); c=md5gg(c,d,a,b,m32[i+7],14,1735328473); b=md5gg(b,c,d,a,m32[i+12],20,-1926607734);
+                a=md5hh(a,b,c,d,m32[i+5],4,-378558); d=md5hh(d,a,b,c,m32[i+8],11,-2022574463); c=md5hh(c,d,a,b,m32[i+11],16,1839030562); b=md5hh(b,c,d,a,m32[i+14],23,-35309556);
+                a=md5hh(a,b,c,d,m32[i+1],4,-1530992060); d=md5hh(d,a,b,c,m32[i+4],11,1272893353); c=md5hh(c,d,a,b,m32[i+7],16,-155497632); b=md5hh(b,c,d,a,m32[i+10],23,-1094730640);
+                a=md5hh(a,b,c,d,m32[i+13],4,681279174); d=md5hh(d,a,b,c,m32[i+0],11,-358537222); c=md5hh(c,d,a,b,m32[i+3],16,-722521979); b=md5hh(b,c,d,a,m32[i+6],23,76029189);
+                a=md5hh(a,b,c,d,m32[i+9],4,-640364487); d=md5hh(d,a,b,c,m32[i+12],11,-421815835); c=md5hh(c,d,a,b,m32[i+15],16,530742520); b=md5hh(b,c,d,a,m32[i+2],23,-995338651);
+                a=md5ii(a,b,c,d,m32[i+0],6,-198630844); d=md5ii(d,a,b,c,m32[i+7],10,1126891415); c=md5ii(c,d,a,b,m32[i+14],15,-1416354905); b=md5ii(b,c,d,a,m32[i+5],21,-57434055);
+                a=md5ii(a,b,c,d,m32[i+12],6,1700485571); d=md5ii(d,a,b,c,m32[i+3],10,-1894986606); c=md5ii(c,d,a,b,m32[i+10],15,-1051523); b=md5ii(b,c,d,a,m32[i+1],21,-2054922799);
+                a=md5ii(a,b,c,d,m32[i+8],6,1873313359); d=md5ii(d,a,b,c,m32[i+15],10,-30611744); c=md5ii(c,d,a,b,m32[i+6],15,-1560198380); b=md5ii(b,c,d,a,m32[i+13],21,1309151649);
+                a=md5ii(a,b,c,d,m32[i+4],6,-145523070); d=md5ii(d,a,b,c,m32[i+11],10,-1120210379); c=md5ii(c,d,a,b,m32[i+2],15,718787259); b=md5ii(b,c,d,a,m32[i+9],21,-343485551);
+                a=safeAdd(a,oa); b=safeAdd(b,ob); c=safeAdd(c,oc); d=safeAdd(d,od);
+            }
+            return [a,b,c,d].map(n => {
+                let s=''; for(let i=0;i<4;i++) s+=('0'+((n>>(i*8))&0xff).toString(16)).slice(-2);
+                return s;
+            }).join('');
+        }
+
+        // ============================================================
+        // DIGEST AUTHENTICATION
+        // ============================================================
+
+        // Returns or generates a stable device UUID stored in localStorage.
+        function getDeviceId() {
+            let id = localStorage.getItem('deviceId');
+            if (!id) {
+                id = (crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c^(crypto.getRandomValues(new Uint8Array(1))[0]&(15>>c/4))).toString(16)));
+                localStorage.setItem('deviceId', id);
+            }
+            return id;
+        }
+
+        // Build an Authorization: Digest header value from WWW-Authenticate params.
+        function buildDigestHeader(method, uri, user, pass, wwwAuth, nc, cnonce) {
+            const realm   = (wwwAuth.match(/realm="([^"]*)"/)   || [])[1] || '';
+            const nonce   = (wwwAuth.match(/nonce="([^"]*)"/)   || [])[1] || '';
+            const qop     = (wwwAuth.match(/qop="?([^",\s]*)"?/) || [])[1] || '';
+            const opaque  = (wwwAuth.match(/opaque="([^"]*)"/)  || [])[1] || '';
+            const ha1     = md5(`${user}:${realm}:${pass}`);
+            const ha2     = md5(`${method}:${uri}`);
+            const ncHex   = nc.toString(16).padStart(8, '0');
+            const response = qop
+                ? md5(`${ha1}:${nonce}:${ncHex}:${cnonce}:${qop}:${ha2}`)
+                : md5(`${ha1}:${nonce}:${ha2}`);
+            let header = `Digest username="${user}", realm="${realm}", nonce="${nonce}", uri="${uri}", response="${response}"`;
+            if (qop)    header += `, qop=${qop}, nc=${ncHex}, cnonce="${cnonce}"`;
+            if (opaque) header += `, opaque="${opaque}"`;
+            return header;
+        }
+
+        // Fetch wrapper that handles HTTP Digest Auth automatically.
+        // On 401 it reads WWW-Authenticate and retries with the correct Authorization header.
+        // iOS/Capacitor: uses native fetch (CapacitorHttp) which already passes headers.
+        async function digestFetch(url, options = {}) {
+            const method  = (options.method || 'GET').toUpperCase();
+            const urlObj  = new URL(url);
+            const uri     = urlObj.pathname + urlObj.search;
+
+            // Step 1: request without credentials to obtain the challenge
+            let res = await fetch(url, { ...options, credentials: 'omit' });
+            if (res.status !== 401) return res;
+
+            const wwwAuth = res.headers.get('WWW-Authenticate') || '';
+            if (!wwwAuth.toLowerCase().startsWith('digest')) return res;
+
+            const ip   = urlObj.hostname;
+            const cred = _getTvCredentials(ip);
+            if (!cred) return res;  // no credentials stored — cannot authenticate
+
+            const cnonce = Math.random().toString(36).substring(2, 10);
+            const authHeader = buildDigestHeader(method, uri, cred.user, cred.pass, wwwAuth, 1, cnonce);
+
+            // Step 2: retry with Authorization: Digest
+            return fetch(url, {
+                ...options,
+                credentials: 'omit',
+                headers: { ...(options.headers || {}), 'Authorization': authHeader },
+            });
+        }
+
+        // Retrieve stored TV credentials from localStorage.
+        function _getTvCredentials(ip) {
+            try { return JSON.parse(localStorage.getItem(`tvAuth_${ip}`) || 'null'); }
+            catch { return null; }
+        }
+
+        // Persist TV credentials to localStorage.
+        function _saveTvCredentials(ip, user, pass) {
+            localStorage.setItem(`tvAuth_${ip}`, JSON.stringify({ user, pass }));
+        }
+
+        // apiFetch: automatically chooses digestFetch for v6, plain fetch otherwise.
+        // All TV command functions (sendKey, setVolume, etc.) should call this instead of fetch().
+        function apiFetch(url, options = {}) {
+            const version = parseInt(localStorage.getItem('tvApiVersion') || '1');
+            if (version >= 6 && IS_CAPACITOR) {
+                const ip = localStorage.getItem('tvIp');
+                if (ip && _getTvCredentials(ip)) return digestFetch(url, options);
+            }
+            return fetch(url, options);
+        }
+
+        // ============================================================
+        // PIN PAIRING (JointSpace API v6 / Android TV)
+        // ============================================================
+
+        // Pending pairing state (kept in memory across the async pairing flow)
+        let _pairState = null;
+
+        // Compute HMAC-SHA1 for pair/grant auth_signature using SubtleCrypto.
+        // secret = base64 decode of "ZmVay1EQVFOaZhwQ4Ku6Ya8="
+        // message = timestamp + pin (as UTF-8 strings)
+        async function _hmacSha1Base64(message) {
+            const SECRET_B64 = 'ZmVay1EQVFOaZhwQ4Ku6Ya8=';
+            const keyBytes = Uint8Array.from(atob(SECRET_B64), c => c.charCodeAt(0));
+            const msgBytes = new TextEncoder().encode(message);
+            const cryptoKey = await crypto.subtle.importKey(
+                'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+            );
+            const sig = await crypto.subtle.sign('HMAC', cryptoKey, msgBytes);
+            return btoa(String.fromCharCode(...new Uint8Array(sig)));
+        }
+
+        // Step 1: POST /6/pair/request — ask TV to display PIN.
+        // Returns { auth_key, timestamp, auth_AppId, timeout_s } on success, throws on failure.
+        async function _pairRequest(ip, port) {
+            const deviceId = getDeviceId();
+            const body = {
+                device: {
+                    app_id:      'com.philips.remote',
+                    app_name:    'Philips Remote',
+                    device_id:   deviceId,
+                    device_name: 'Philips Remote iOS',
+                    type:        'native',
+                },
+                scope: ['read', 'write', 'control'],
+            };
+            const res = await fetch(`https://${ip}:${port}/6/pair/request`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`pair/request failed: ${res.status}`);
+            return res.json();
+        }
+
+        // Step 3: POST /6/pair/grant — confirm PIN entered by user.
+        async function _pairGrant(ip, port, pin, pairData) {
+            const { auth_key, timestamp, auth_AppId } = pairData;
+            const signature = await _hmacSha1Base64(timestamp + pin);
+            const deviceId  = getDeviceId();
+            const body = {
+                auth: {
+                    auth_AppId,
+                    pin,
+                    auth_timestamp: timestamp,
+                    auth_signature: signature,
+                },
+                device: {
+                    app_id:      'com.philips.remote',
+                    app_name:    'Philips Remote',
+                    device_id:   deviceId,
+                    device_name: 'Philips Remote iOS',
+                    type:        'native',
+                },
+            };
+            // Grant must be sent with digest auth using auth_key as password.
+            _saveTvCredentials(ip, auth_AppId, auth_key);
+            const url = `https://${ip}:${port}/6/pair/grant`;
+            const res = await digestFetch(url, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(body),
+            });
+            if (!res.ok) throw new Error(`pair/grant failed: ${res.status}`);
+            const granted = await res.json();
+            // Final credentials: auth_AppId as user, returned auth_key as password.
+            const finalPass = granted.auth_key || auth_key;
+            _saveTvCredentials(ip, auth_AppId, finalPass);
+            return { user: auth_AppId, pass: finalPass };
+        }
+
+        // Entry point: start pairing with a v6 TV.
+        // Stores pairing state then shows the PIN dialog.
+        async function startPairing(ip, port, onSuccess) {
+            const pairModal = document.getElementById('pairModal');
+            const msgEl     = document.getElementById('pairModalMsg');
+            const errEl     = document.getElementById('pairError');
+            const pinInput  = document.getElementById('pairPinInput');
+            const pairBtn   = document.getElementById('pairBtn');
+
+            errEl.style.display = 'none';
+            pinInput.value = '';
+            pairBtn.disabled = false;
+            msgEl.textContent = 'Requesting pairing… check your TV screen for a PIN.';
+            pairModal.classList.add('active');
+
+            try {
+                const pairData = await _pairRequest(ip, port);
+                msgEl.textContent = 'A PIN code appeared on your TV screen. Enter it below.';
+                _pairState = { ip, port, pairData, onSuccess };
+            } catch (e) {
+                msgEl.textContent = '';
+                errEl.textContent = `Failed to start pairing: ${e.message}`;
+                errEl.style.display = 'block';
+                _pairState = null;
+            }
+        }
+
+        async function submitPairing() {
+            if (!_pairState) return;
+            const { ip, port, pairData, onSuccess } = _pairState;
+            const pin     = document.getElementById('pairPinInput').value.trim();
+            const errEl   = document.getElementById('pairError');
+            const pairBtn = document.getElementById('pairBtn');
+
+            if (!pin) {
+                errEl.textContent = 'Please enter the PIN shown on your TV.';
+                errEl.style.display = 'block';
+                return;
+            }
+            errEl.style.display = 'none';
+            pairBtn.disabled = true;
+            pairBtn.textContent = 'Pairing…';
+
+            try {
+                await _pairGrant(ip, port, pin, pairData);
+                _pairState = null;
+                document.getElementById('pairModal').classList.remove('active');
+                if (onSuccess) await onSuccess();
+            } catch (e) {
+                errEl.textContent = `Pairing failed: ${e.message}`;
+                errEl.style.display = 'block';
+                pairBtn.disabled = false;
+                pairBtn.textContent = 'Pair';
+            }
+        }
+
+        function cancelPairing() {
+            _pairState = null;
+            document.getElementById('pairModal').classList.remove('active');
+        }
+
+        // ============================================================
         // SERVER CONFIG
         // ============================================================
 
@@ -1393,10 +1683,16 @@
             localStorage.setItem('tvApiVersion', String(apiVersion || 1));
             if (!IS_CAPACITOR) {
                 try {
+                    // Include digest credentials for v6 so server.py can proxy authenticated requests.
+                    const configPayload = { ip, port: port || 1925, apiVersion: apiVersion || 1 };
+                    if ((apiVersion || 1) >= 6) {
+                        const cred = _getTvCredentials(ip);
+                        if (cred) { configPayload.tvUser = cred.user; configPayload.tvPass = cred.pass; }
+                    }
                     await fetch(`${getServerUrl()}/config`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ip, port: port || 1925, apiVersion: apiVersion || 1 }),
+                        body: JSON.stringify(configPayload),
                     });
                 } catch {}
             }
@@ -1433,18 +1729,26 @@
             });
         }
 
-        // Probe one IP directly for a Philips TV (v1 HTTP, v6 HTTPS, v5 HTTP)
+        // Probe one IP directly for a Philips TV.
+        // Tries: port 1925 v1 HTTP, port 1925 v6 HTTPS, port 1925 v5 HTTP,
+        //        port 1926 v6 HTTPS (Android TV uses port 1926).
         // AbortController works with CapacitorHttp GET: signal is passed to WKWebView fetch.
         async function probeTvDirect(ip, port = 1925) {
-            for (const [v, scheme] of [[1,'http'],[6,'https'],[5,'http']]) {
+            const candidates = [
+                [ip, port, 1, 'http'],
+                [ip, port, 6, 'https'],
+                [ip, port, 5, 'http'],
+                [ip, 1926,  6, 'https'],  // Android TV
+            ];
+            for (const [probeIp, probePort, v, scheme] of candidates) {
                 try {
                     const ctrl = new AbortController();
                     setTimeout(() => ctrl.abort(), 1500);
-                    const r = await fetch(`${scheme}://${ip}:${port}/${v}/system`, { signal: ctrl.signal });
+                    const r = await fetch(`${scheme}://${probeIp}:${probePort}/${v}/system`, { signal: ctrl.signal });
                     if (!r.ok) continue;
                     const d = await r.json();
-                    console.log(`[scan] Found TV at ${ip}:${port} v${v}`);
-                    return { ip, port, apiVersion: v, name: d.name || 'Philips TV', model: d.model || '' };
+                    console.log(`[scan] Found TV at ${probeIp}:${probePort} v${v}`);
+                    return { ip: probeIp, port: probePort, apiVersion: v, name: d.name || 'Philips TV', model: d.model || '' };
                 } catch {}
             }
             return null;
@@ -1569,21 +1873,37 @@
                 Scan Again`;
         }
 
+        // Connect to a TV, triggering PIN pairing if needed (v6, no stored credentials).
+        async function _connectTv(ip, port, apiVersion, name, closeUiFn) {
+            await saveConfig(ip, port, apiVersion);
+            localStorage.setItem('tvName', name || 'Philips TV');
+            localStorage.setItem('tvApiVersion', String(apiVersion || 1));
+            document.getElementById('tvTitle').textContent = (name || 'PHILIPS TV').toUpperCase();
+            closeUiFn();
+
+            // v6 TVs require Digest Auth. If credentials are missing, start pairing.
+            if (IS_CAPACITOR && apiVersion >= 6 && !_getTvCredentials(ip)) {
+                await startPairing(ip, port, async () => {
+                    await loadTvCapabilities();
+                    startPolling();
+                });
+                return; // rest of connect runs from pairing callback
+            }
+
+            await loadTvCapabilities();
+            startPolling();
+        }
+
         async function selectTv(ip, port, apiVersion, name, el, context) {
             document.querySelectorAll(`#${context === 'setup' ? 'setupTvList' : 'modalTvList'} .tv-item`)
                 .forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
 
-            await saveConfig(ip, port, apiVersion);
-            localStorage.setItem('tvName', name || 'Philips TV');
-            localStorage.setItem('tvApiVersion', apiVersion || '1');
-            document.getElementById('tvTitle').textContent = (name || 'PHILIPS TV').toUpperCase();
-
-            if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
-            else closeTvModal();
-
-            await loadTvCapabilities();
-            startPolling();
+            const closeUi = () => {
+                if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
+                else closeTvModal();
+            };
+            await _connectTv(ip, port, apiVersion, name, closeUi);
         }
 
         async function manualConnect(context) {
@@ -1597,14 +1917,11 @@
             const apiVersion = detected?.apiVersion || 1;
             const name       = detected?.name       || 'Philips TV';
 
-            await saveConfig(ip, port, apiVersion);
-            localStorage.setItem('tvName', name);
-
-            if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
-            else closeTvModal();
-
-            await loadTvCapabilities();
-            startPolling();
+            const closeUi = () => {
+                if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
+                else closeTvModal();
+            };
+            await _connectTv(ip, port, apiVersion, name, closeUi);
         }
 
         // ============================================================
@@ -1626,7 +1943,7 @@
 
         async function loadTvCapabilities() {
             try {
-                const volRes = await fetch(`${getApiBase()}/audio/volume`);
+                const volRes = await apiFetch(`${getApiBase()}/audio/volume`);
                 if (volRes.ok) {
                     const vol = await volRes.json();
                     const slider = document.getElementById('volumeSlider');
@@ -1640,7 +1957,7 @@
             } catch {}
 
             try {
-                const srcRes = await fetch(`${getApiBase()}/sources`);
+                const srcRes = await apiFetch(`${getApiBase()}/sources`);
                 if (srcRes.ok) {
                     const sources = normalizeSources(await srcRes.json());
                     if (sources.length) renderSources(sources);
@@ -1698,11 +2015,12 @@
         async function sendKey(key) {
             const base = getApiBase();
             if (!base) { showStatus('error', 'Not configured'); return; }
-            const doSend = () => fetch(base + '/input/key', {
+            const opts = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key }),
-            });
+            };
+            const doSend = () => apiFetch(base + '/input/key', opts);
             try {
                 let response;
                 try {
@@ -1721,7 +2039,7 @@
         async function setVolume(value) {
             document.getElementById('volumeValue').textContent = value;
             try {
-                await fetch(`${getApiBase()}/audio/volume`, {
+                await apiFetch(`${getApiBase()}/audio/volume`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ current: parseInt(value), muted: false }),
@@ -1734,7 +2052,7 @@
 
         async function setSource(id) {
             try {
-                await fetch(`${getApiBase()}/sources/current`, {
+                await apiFetch(`${getApiBase()}/sources/current`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id }),
@@ -1747,7 +2065,7 @@
 
         async function getVolume() {
             try {
-                const response = await fetch(`${getApiBase()}/audio/volume`);
+                const response = await apiFetch(`${getApiBase()}/audio/volume`);
                 if (!response.ok) throw new Error('Bad response');
                 const data = await response.json();
                 document.getElementById('volumeSlider').value = data.current;

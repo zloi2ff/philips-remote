@@ -6,16 +6,20 @@ Supports auto-discovery of Philips TVs on the local network.
 Supports JointSpace API versions 1 (HTTP) and 6 (HTTPS, Android TV).
 """
 
+import hashlib
 import hmac
 import http.server
 import ipaddress
 import json
+import os
+import random
+import socket
 import ssl
+import string
+import threading
+import time
 import urllib.request
 import urllib.error
-import os
-import socket
-import threading
 
 # Constants
 API_PREFIX = '/api'
@@ -42,6 +46,10 @@ WWW_DIR    = os.path.join(SCRIPT_DIR, 'www')
 
 # Rate-limiting lock for /discover: only one scan at a time
 _discover_lock = threading.Lock()
+
+# In-memory store of TV digest credentials: { ip: {user, pass} }
+# Set via /config endpoint; used by the proxy when apiVersion >= 6.
+_tv_credentials: dict[str, dict[str, str]] = {}
 
 # Private RFC-1918 networks allowed as TV IP targets (SSRF mitigation)
 _PRIVATE_NETWORKS = [
@@ -102,23 +110,29 @@ def get_local_subnet() -> tuple[str | None, str | None]:
 
 def check_tv(ip: str, port: int, timeout: int = SCAN_TIMEOUT) -> dict | None:
     """Check if a Philips TV responds at the given IP.
-    Tries API v1 (HTTP), v6 (HTTPS), v5 (HTTP) in order.
-    Returns device info dict with apiVersion field, or None."""
+
+    Tries in order:
+      - port 1925: API v1 HTTP, v6 HTTPS, v5 HTTP
+      - port 1926: API v6 HTTPS  (Android TV)
+
+    Returns device info dict with apiVersion/port fields, or None.
+    """
     candidates = [
-        (1, 'http'),
-        (6, 'https'),
-        (5, 'http'),
+        (port, 1, 'http'),
+        (port, 6, 'https'),
+        (port, 5, 'http'),
+        (1926, 6, 'https'),   # Android TV uses port 1926
     ]
-    for api_version, scheme in candidates:
+    for probe_port, api_version, scheme in candidates:
         try:
-            url = f"{scheme}://{ip}:{port}/{api_version}/system"
+            url = f"{scheme}://{ip}:{probe_port}/{api_version}/system"
             req = urllib.request.Request(url)
             ctx = _ssl_context() if scheme == 'https' else None
             with urllib.request.urlopen(req, timeout=timeout, context=ctx) as response:
                 data = json.loads(response.read())
                 return {
                     'ip':         ip,
-                    'port':       port,
+                    'port':       probe_port,
                     'apiVersion': api_version,
                     'name':       data.get('name', 'Philips TV'),
                     'model':      data.get('model', ''),
@@ -150,6 +164,119 @@ def scan_network(subnet: str, port: int = JOINTSPACE_PORT) -> list[dict]:
         t.join(timeout=SCAN_TIMEOUT + 2)
 
     return found
+
+
+def _build_digest_header(method: str, uri: str, user: str, password: str,
+                         www_auth: str, nc: int, cnonce: str) -> str:
+    """Build an Authorization: Digest header value from a WWW-Authenticate challenge.
+
+    Args:
+        method:    HTTP method ('GET', 'POST', …)
+        uri:       Request path+query (e.g. '/6/input/key')
+        user:      Digest username
+        password:  Digest password
+        www_auth:  Value of the WWW-Authenticate header from the 401 response
+        nc:        Nonce count (integer, e.g. 1)
+        cnonce:    Client nonce (random hex string)
+
+    Returns:
+        Full value for the Authorization header (without 'Authorization: ' prefix).
+    """
+    import re
+
+    def _extract(field: str) -> str:
+        m = re.search(rf'{field}="([^"]*)"', www_auth)
+        return m.group(1) if m else ''
+
+    realm  = _extract('realm')
+    nonce  = _extract('nonce')
+    opaque = _extract('opaque')
+
+    # qop may appear without quotes: qop=auth or qop="auth"
+    qop_m = re.search(r'qop="?([^",\s]*)"?', www_auth)
+    qop   = qop_m.group(1) if qop_m else ''
+
+    ha1 = hashlib.md5(f"{user}:{realm}:{password}".encode()).hexdigest()
+    ha2 = hashlib.md5(f"{method}:{uri}".encode()).hexdigest()
+    nc_hex = format(nc, '08x')
+
+    if qop:
+        response = hashlib.md5(
+            f"{ha1}:{nonce}:{nc_hex}:{cnonce}:{qop}:{ha2}".encode()
+        ).hexdigest()
+    else:
+        response = hashlib.md5(f"{ha1}:{nonce}:{ha2}".encode()).hexdigest()
+
+    header = (
+        f'Digest username="{user}", realm="{realm}", nonce="{nonce}", '
+        f'uri="{uri}", response="{response}"'
+    )
+    if qop:
+        header += f', qop={qop}, nc={nc_hex}, cnonce="{cnonce}"'
+    if opaque:
+        header += f', opaque="{opaque}"'
+    return header
+
+
+def _proxy_with_digest(url: str, method: str, body: bytes | None,
+                       creds: dict[str, str],
+                       ctx: ssl.SSLContext | None) -> bytes:
+    """Perform an HTTP request with Digest Auth challenge-response.
+
+    Sends the request once to obtain the 401 challenge, then retries
+    with the computed Authorization header.
+
+    Args:
+        url:    Full URL to request
+        method: HTTP method
+        body:   Request body bytes (may be None for GET)
+        creds:  {'user': ..., 'pass': ...}
+        ctx:    SSL context (or None for plain HTTP)
+
+    Returns:
+        Response body bytes.
+
+    Raises:
+        urllib.error.HTTPError: if the authenticated request still fails
+        Exception: on network / SSL errors
+    """
+    from urllib.parse import urlparse
+
+    parsed   = urlparse(url)
+    uri      = parsed.path + (('?' + parsed.query) if parsed.query else '')
+    user     = creds['user']
+    password = creds['pass']
+
+    # Step 1 — unauthenticated probe to get the challenge
+    req1 = urllib.request.Request(url, data=body, method=method)
+    req1.add_header('Content-Type', 'application/json')
+    try:
+        with urllib.request.urlopen(req1, timeout=TV_REQUEST_TIMEOUT, context=ctx):
+            pass  # 200 without auth — no digest needed, re-fetch below
+    except urllib.error.HTTPError as e:
+        if e.code != 401:
+            raise
+        www_auth = e.headers.get('WWW-Authenticate', '')
+        if not www_auth.lower().startswith('digest'):
+            raise
+    else:
+        www_auth = ''  # no challenge; fall through to plain request
+
+    if not www_auth:
+        # TV responded 200 on first try — just redo the request normally
+        req2 = urllib.request.Request(url, data=body, method=method)
+        req2.add_header('Content-Type', 'application/json')
+        with urllib.request.urlopen(req2, timeout=TV_REQUEST_TIMEOUT, context=ctx) as resp:
+            return resp.read()
+
+    # Step 2 — retry with Digest Authorization
+    cnonce     = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    auth_value = _build_digest_header(method, uri, user, password, www_auth, 1, cnonce)
+    req2 = urllib.request.Request(url, data=body, method=method)
+    req2.add_header('Content-Type',  'application/json')
+    req2.add_header('Authorization', auth_value)
+    with urllib.request.urlopen(req2, timeout=TV_REQUEST_TIMEOUT, context=ctx) as resp:
+        return resp.read()
 
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
@@ -309,10 +436,22 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 return
             tv_config['apiVersion'] = api_version
 
+        # Optional: store digest credentials for v6 TV proxy auth.
+        # Accepted as { "tvUser": "auth_AppId", "tvPass": "auth_key" }.
+        tv_user = body.get('tvUser', '')
+        tv_pass = body.get('tvPass', '')
+        if tv_user and tv_pass and tv_config['ip']:
+            _tv_credentials[tv_config['ip']] = {'user': str(tv_user), 'pass': str(tv_pass)}
+            print(f"[config] Stored digest credentials for {tv_config['ip']}")
+
         self._send_json(tv_config)
 
     def _proxy_tv(self, method: str) -> None:
-        """Proxy an HTTP/HTTPS request to the Philips TV JointSpace API."""
+        """Proxy an HTTP/HTTPS request to the Philips TV JointSpace API.
+
+        For API v6+, automatically adds HTTP Digest Auth if credentials are
+        stored (via /config tvUser/tvPass fields or in _tv_credentials).
+        """
         if not tv_config['ip']:
             self._send_json({
                 'error': 'TV not configured. Use discovery or set IP manually.'
@@ -320,25 +459,30 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         # v6+ uses HTTPS; older models use plain HTTP
-        scheme = 'https' if tv_config['apiVersion'] >= 6 else 'http'
+        scheme  = 'https' if tv_config['apiVersion'] >= 6 else 'http'
         tv_path = self.path[len(API_PREFIX):]
         tv_url  = f"{scheme}://{tv_config['ip']}:{tv_config['port']}{tv_path}"
         ctx     = _ssl_context() if scheme == 'https' else None
 
         try:
             body = self._read_body() if method == 'POST' else None
-            req  = urllib.request.Request(tv_url, data=body, method=method)
-            req.add_header('Content-Type', 'application/json')
 
-            with urllib.request.urlopen(req, timeout=TV_REQUEST_TIMEOUT, context=ctx) as response:
-                data = response.read()
-                self.send_response(response.status)
-                self.send_header('Content-Type',
-                                 response.headers.get('Content-Type', 'application/json'))
-                self.send_header('Content-Length', len(data))
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(data)
+            # For v6+ with stored credentials, use Digest Auth via urllib opener.
+            creds = _tv_credentials.get(tv_config['ip'])
+            if tv_config['apiVersion'] >= 6 and creds:
+                data = _proxy_with_digest(tv_url, method, body, creds, ctx)
+            else:
+                req = urllib.request.Request(tv_url, data=body, method=method)
+                req.add_header('Content-Type', 'application/json')
+                with urllib.request.urlopen(req, timeout=TV_REQUEST_TIMEOUT, context=ctx) as resp:
+                    data = resp.read()
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', len(data))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(data)
 
         except urllib.error.HTTPError as e:
             error_body = e.read()
