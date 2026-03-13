@@ -137,6 +137,9 @@
             justify-content: flex-start;
             padding-bottom: max(calc(env(safe-area-inset-bottom) + 20px), 40px);
         }
+        .page.expanded.ad-visible {
+            padding-bottom: max(calc(env(safe-area-inset-bottom) + 70px), 90px);
+        }
 
         .main-content {
             display: flex;
@@ -1133,8 +1136,9 @@
                     isTesting: false,
                 });
                 // Banner height ~50px + safe area inset (home indicator on iPhone X+)
-                document.getElementById('tvPage').style.paddingBottom =
-                    'calc(70px + env(safe-area-inset-bottom))';
+                const tvPage = document.getElementById('tvPage');
+                tvPage.style.paddingBottom = 'calc(70px + env(safe-area-inset-bottom))';
+                tvPage.classList.add('ad-visible');
             } catch (e) {
                 console.warn('AdMob:', e);
             }
@@ -1145,7 +1149,9 @@
             const AdMob = getPlugin('AdMob');
             if (!AdMob) return;
             try { await AdMob.removeBanner(); } catch {}
-            document.getElementById('tvPage').style.paddingBottom = '';
+            const tvPage = document.getElementById('tvPage');
+            tvPage.style.paddingBottom = '';
+            tvPage.classList.remove('ad-visible');
         }
 
         // ============================================================
@@ -1459,7 +1465,8 @@
             const cred = _getTvCredentials(ip);
             if (!cred) return res;  // no credentials stored — cannot authenticate
 
-            const cnonce = Math.random().toString(36).substring(2, 10);
+            const cnonce = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+                .map(b => b.toString(16).padStart(2,'0')).join('');
             const authHeader = buildDigestHeader(method, uri, cred.user, cred.pass, wwwAuth, 1, cnonce);
 
             // Step 2: retry with Authorization: Digest
