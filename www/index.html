@@ -1756,7 +1756,7 @@
             for (const [probeIp, probePort, v, scheme] of candidates) {
                 try {
                     const ctrl = new AbortController();
-                    setTimeout(() => ctrl.abort(), 1500);
+                    setTimeout(() => ctrl.abort(), 2500);
                     const r = await fetch(`${scheme}://${probeIp}:${probePort}/${v}/system`, { signal: ctrl.signal });
                     if (!r.ok) continue;
                     const d = await r.json();
