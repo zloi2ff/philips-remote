@@ -20,6 +20,10 @@ public class TvConfigPlugin: CAPPlugin, CAPBridgedPlugin {
             call.reject("Missing ip — received: \(String(describing: rawIp))")
             return
         }
+        guard TvConfigHandler.isPrivateIPv4(ip) else {
+            call.reject("IP must be a valid RFC-1918 private address: \(ip)")
+            return
+        }
         let port       = call.getInt("port")       ?? 1925
         let apiVersion = call.getInt("apiVersion") ?? 1
 
@@ -31,7 +35,6 @@ public class TvConfigPlugin: CAPPlugin, CAPBridgedPlugin {
         defaults.set(ip,         forKey: "tvIp")
         defaults.set(port,       forKey: "tvPort")
         defaults.set(apiVersion, forKey: "tvApiVersion")
-        defaults.synchronize()
 
         WidgetCenter.shared.reloadAllTimelines()
         print("[TvConfigPlugin] Saved ip=\(ip) port=\(port) apiVersion=\(apiVersion)")

@@ -44,8 +44,8 @@ struct PhilipsProvider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<PhilipsEntry>) -> Void) {
         let entry = makeEntry()
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: .now) ?? .now
-        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
+        // .never: config changes trigger reloadAllTimelines() from TvConfigHandler — no periodic refresh needed
+        completion(Timeline(entries: [entry], policy: .never))
     }
 
     private func makeEntry() -> PhilipsEntry {
@@ -239,15 +239,6 @@ private struct MediumWidgetView: View {
             HStack {
                 WidgetHeader()
                 Spacer()
-                Text("Widget")
-                    .font(.system(size: 8, weight: .medium))
-                    .foregroundStyle(Design.accent)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-                    .background(
-                        Capsule()
-                            .fill(Design.accent.opacity(0.15))
-                    )
             }
 
             HStack(spacing: 8) {

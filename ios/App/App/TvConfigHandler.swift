@@ -35,8 +35,11 @@ final class TvConfigHandler: NSObject, WKScriptMessageHandler {
 
     // MARK: - Private
 
-    /// Accept only RFC-1918 private IPv4 ranges (mirrors server.py is_valid_tv_ip)
-    private static func isPrivateIPv4(_ ip: String) -> Bool {
+    /// Accept only well-formed RFC-1918 private IPv4 addresses (mirrors server.py is_valid_tv_ip).
+    /// Validates structural format (4 numeric octets) before prefix check.
+    static func isPrivateIPv4(_ ip: String) -> Bool {
+        let parts = ip.split(separator: ".", omittingEmptySubsequences: false)
+        guard parts.count == 4, parts.allSatisfy({ UInt8($0) != nil }) else { return false }
         let privateRanges = ["10.", "192.168.", "172.16.", "172.17.", "172.18.", "172.19.",
                              "172.20.", "172.21.", "172.22.", "172.23.", "172.24.", "172.25.",
                              "172.26.", "172.27.", "172.28.", "172.29.", "172.30.", "172.31."]
@@ -52,7 +55,6 @@ final class TvConfigHandler: NSObject, WKScriptMessageHandler {
         defaults.set(ip,         forKey: "tvIp")
         defaults.set(port,       forKey: "tvPort")
         defaults.set(apiVersion, forKey: "tvApiVersion")
-        defaults.synchronize()
 
         WidgetCenter.shared.reloadAllTimelines()
         print("[TvConfigHandler] Saved config — ip:\(ip) port:\(port) apiVersion:\(apiVersion)")
