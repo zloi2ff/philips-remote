@@ -124,6 +124,7 @@ private enum TvSender {
         // Create session per-request so credentials are always current
         let delegate = LocalNetworkDelegate(authUser: config.authUser, authPass: config.authPass)
         let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+        defer { session.finishTasksAndInvalidate() }
 
         let (_, response) = try await session.data(for: request)
 
