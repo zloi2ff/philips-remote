@@ -8,8 +8,8 @@
     },
     "AdMob": {
       "_comment": "Replace appId with real AdMob App ID and set initializeForTesting to false before App Store release. See RELEASE_CHECKLIST.md",
-      "appId": "ca-app-pub-3940256099942544~1458002511",
-      "initializeForTesting": true
+      "appId": "ca-app-pub-2175825252343068~6407114604",
+      "initializeForTesting": false
     }
   }
 }
