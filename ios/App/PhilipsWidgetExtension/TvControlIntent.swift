@@ -1,4 +1,5 @@
 import AppIntents
+import AudioToolbox
 import Foundation
 
 // MARK: - Shared TV Config Reader
@@ -349,6 +350,7 @@ struct VolumeUpIntent: AppIntent {
     static let title: LocalizedStringResource = "Volume Up"
 
     func perform() async throws -> some IntentResult {
+        AudioServicesPlaySystemSound(1104)
         try await TvSender.sendKey("VolumeUp")
         return .result()
     }
@@ -360,6 +362,7 @@ struct VolumeDownIntent: AppIntent {
     static let title: LocalizedStringResource = "Volume Down"
 
     func perform() async throws -> some IntentResult {
+        AudioServicesPlaySystemSound(1104)
         try await TvSender.sendKey("VolumeDown")
         return .result()
     }
@@ -371,6 +374,7 @@ struct MuteIntent: AppIntent {
     static let title: LocalizedStringResource = "Mute"
 
     func perform() async throws -> some IntentResult {
+        AudioServicesPlaySystemSound(1104)
         try await TvSender.sendKey("Mute")
         return .result()
     }
@@ -382,6 +386,7 @@ struct StandbyIntent: AppIntent {
     static let title: LocalizedStringResource = "Power Off (Standby)"
 
     func perform() async throws -> some IntentResult {
+        AudioServicesPlaySystemSound(1104)
         try await TvSender.sendKey("Standby")
         return .result()
     }
