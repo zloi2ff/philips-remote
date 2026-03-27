@@ -155,7 +155,7 @@
         .page.expanded .main-content {
             flex: none;
             justify-content: flex-start;
-            gap: 12px;
+            gap: 8px;
         }
 
         /* Top header */
@@ -193,9 +193,9 @@
         .btn {
             background: linear-gradient(180deg, var(--btn-from) 0%, var(--btn-to) 100%);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-primary);
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
             transition: all 0.1s;
             display: flex;
@@ -211,7 +211,7 @@
 
         .btn.power {
             background: linear-gradient(180deg, #c0392b 0%, #962020 100%);
-            width: 44px; height: 44px;
+            width: 38px; height: 38px;
             border-radius: 50%;
             border: none;
             flex-shrink: 0;
@@ -222,7 +222,7 @@
         }
 
         .btn.settings-btn {
-            width: 44px; height: 44px;
+            width: 38px; height: 38px;
             border-radius: 50%;
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -231,16 +231,16 @@
         .btn:focus-visible, .discover-btn:focus-visible, .seg-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
         /* Volume */
-        .volume-row { margin-bottom: 12px; }
+        .volume-row { margin-bottom: 6px; }
 
         .volume-slider {
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             background: var(--bg-card);
-            padding: 12px 15px;
-            border-radius: 16px;
+            padding: 8px 12px;
+            border-radius: 12px;
         }
 
         .volume-slider input {
@@ -254,7 +254,7 @@
 
         .volume-slider input::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 24px; height: 24px;
+            width: 20px; height: 20px;
             background: var(--accent);
             border-radius: 50%;
             cursor: pointer;
@@ -280,7 +280,7 @@
             gap: 8px;
         }
 
-        .nav-row .btn { height: 42px; font-size: 12px; font-weight: 500; }
+        .nav-row .btn { height: 34px; font-size: 11px; font-weight: 500; }
 
         /* Main controls */
         .main-controls {
@@ -291,10 +291,10 @@
         }
 
         /* Side controls */
-        .side-controls { display: flex; flex-direction: column; gap: 6px; width: 52px; }
+        .side-controls { display: flex; flex-direction: column; gap: 4px; width: 48px; }
 
-        .side-controls .btn { width: 52px; height: 48px; font-size: 18px; font-weight: 300; }
-        .side-controls .btn.mute { font-size: 10px; font-weight: 500; }
+        .side-controls .btn { width: 48px; height: 40px; font-size: 16px; font-weight: 300; }
+        .side-controls .btn.mute { font-size: 9px; font-weight: 500; }
         .side-controls .label {
             font-size: 8px;
             color: var(--text-muted);
@@ -308,45 +308,45 @@
 
         .dpad {
             display: grid;
-            grid-template-columns: 58px 58px 58px;
-            grid-template-rows: 58px 58px 58px;
-            gap: 4px;
+            grid-template-columns: 48px 48px 48px;
+            grid-template-rows: 48px 48px 48px;
+            gap: 3px;
         }
 
-        .dpad .btn { width: 58px; height: 58px; font-size: 20px; }
+        .dpad .btn { width: 48px; height: 48px; font-size: 18px; }
 
         .dpad .btn.ok {
             background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
             border-radius: 50%;
-            font-size: 14px; font-weight: 600;
+            font-size: 13px; font-weight: 600;
             border: none;
         }
 
         .dpad .empty { background: transparent; }
 
         /* Action row */
-        .action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .action-row .btn { height: 42px; font-size: 12px; font-weight: 500; }
+        .action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .action-row .btn { height: 34px; font-size: 11px; font-weight: 500; }
 
         /* Expand button */
         .expand-btn {
             width: 100%;
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
-            border-radius: 12px;
+            border-radius: 10px;
             color: var(--text-secondary);
-            font-size: 11px;
-            padding: 12px;
+            font-size: 10px;
+            padding: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             margin-top: auto;
             flex-shrink: 0;
         }
 
-        .page.expanded .expand-btn { margin-top: 12px; }
+        .page.expanded .expand-btn { margin-top: 8px; }
         .expand-btn:active { background: rgba(128,128,128,0.15); }
         .expand-btn .arrow { transition: transform 0.3s; font-size: 10px; }
         .expand-btn.expanded .arrow { transform: rotate(180deg); }
@@ -354,8 +354,8 @@
         /* Collapsible */
         .collapsible { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
         .collapsible.expanded { max-height: 1200px; }
-        .collapsible-content { padding-top: 10px; }
-        .section { margin-bottom: 10px; }
+        .collapsible-content { padding-top: 6px; }
+        .section { margin-bottom: 6px; }
         .section-title {
             font-size: 8px;
             color: var(--text-muted);
@@ -366,18 +366,18 @@
         }
 
         /* Playback */
-        .playback-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 6px; }
-        .playback-row .btn { height: 38px; font-size: 13px; }
-        .playback-row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-        .playback-row2 .btn { height: 34px; font-size: 10px; }
+        .playback-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 4px; }
+        .playback-row .btn { height: 32px; font-size: 12px; }
+        .playback-row2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .playback-row2 .btn { height: 28px; font-size: 9px; }
 
         /* Sources */
-        .sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-        .sources .btn { font-size: 9px; height: 34px; padding: 4px; }
+        .sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .sources .btn { font-size: 9px; height: 28px; padding: 3px; }
 
         /* Color buttons */
-        .color-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .color-row .btn { height: 32px; border: none; }
+        .color-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+        .color-row .btn { height: 26px; border: none; }
         /* Safari flexbox scroll bug: padding-bottom on overflow flex container is ignored.
            Use margin-bottom on last child instead. */
         .ad-visible .color-row {
@@ -2695,12 +2695,14 @@
         }
 
         async function selectTv(ip, port, apiVersion, name, el, context) {
-            document.querySelectorAll(`#${context === 'setup' ? 'setupTvList' : 'modalTvList'} .tv-item`)
-                .forEach(i => i.classList.remove('selected'));
+            const listIds = { setup: 'setupTvList', modal: 'modalTvList', brandScan: 'brandScanList' };
+            const listId = listIds[context] || 'modalTvList';
+            document.querySelectorAll(`#${listId} .tv-item`).forEach(i => i.classList.remove('selected'));
             el.classList.add('selected');
 
             const closeUi = () => {
                 if (context === 'setup') document.getElementById('setupScreen').classList.remove('active');
+                else if (context === 'brandScan') document.getElementById('brandSelectScreen').classList.remove('active');
                 else closeTvModal();
             };
             await _connectTv(ip, port, apiVersion, name, closeUi);
