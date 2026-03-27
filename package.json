@@ -1,6 +1,6 @@
 {
   "name": "classic-remote",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Multi-brand Smart TV remote control (Philips, LG, Samsung, Sony, TCL, Xiaomi, Hisense). Web app, PWA, and native iOS with WidgetKit.",
   "scripts": {
     "sync": "npx cap sync ios",

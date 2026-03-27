@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body>
+<script>
+const brand = new URLSearchParams(location.search).get('brand') || 'philips';
+localStorage.setItem('_mock', brand);
+localStorage.removeItem('tvBrand');
+localStorage.removeItem('tvIp');
+location.href = 'index.html';
+</script>
+</body></html>

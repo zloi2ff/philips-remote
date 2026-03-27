@@ -451,7 +451,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PhilipsWidgetExtension/PhilipsWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C2TP8275T7;
 				INFOPLIST_FILE = PhilipsWidgetExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -474,7 +474,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = PhilipsWidgetExtension/PhilipsWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = C2TP8275T7;
 				INFOPLIST_FILE = PhilipsWidgetExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;

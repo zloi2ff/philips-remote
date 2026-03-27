@@ -387,6 +387,24 @@
         .btn.color-yellow { background: linear-gradient(180deg, var(--yellow) 0%, #d4ac0d 100%); }
         .btn.color-blue   { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%); }
 
+        /* Larger buttons on tall screens (6.7" Pro Max etc.) */
+        @media (min-height: 800px) {
+            .nav-row .btn { height: 44px; font-size: 13px; }
+            .side-controls { width: 56px; }
+            .side-controls .btn { width: 56px; height: 50px; font-size: 19px; }
+            .side-controls .btn.mute { font-size: 11px; }
+            .dpad { grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 4px; }
+            .dpad .btn { width: 60px; height: 60px; font-size: 22px; }
+            .dpad .btn.ok { font-size: 15px; }
+            .action-row .btn { height: 44px; font-size: 13px; }
+            .volume-slider { padding: 12px 16px; }
+            .btn.power { width: 46px; height: 46px; }
+            .btn.settings-btn { width: 46px; height: 46px; }
+            .playback-row .btn { height: 40px; }
+            .sources .btn { height: 36px; }
+            .color-row .btn { height: 34px; }
+        }
+
         /* ============================================================
            SETUP SCREEN
         ============================================================ */
@@ -1263,7 +1281,8 @@
             if (!AdMob) return;
             try {
                 await AdMob.initialize({ initializeForTesting: false });
-                try { await AdMob.requestTrackingAuthorization(); } catch {}
+                // ATT disabled for screenshots — re-enable before release
+                // try { await AdMob.requestTrackingAuthorization(); } catch {}
                 await AdMob.showBanner({
                     adId:     MONETIZATION.admobBannerId,
                     adSize:   'ADAPTIVE_BANNER',
@@ -3041,8 +3060,44 @@
                 startPolling();
                 renderExtraButtons();
             } else {
-                // No TV configured — show brand selection
-                document.getElementById('brandSelectScreen').classList.add('active');
+                // SCREENSHOT MOCK MODE — auto-removes after first use
+                const _mockBrand = localStorage.getItem('_mock');
+                if (_mockBrand) localStorage.removeItem('_mock');
+                if (_mockBrand === 'philips') {
+                    localStorage.setItem('tvBrand', 'philips');
+                    localStorage.setItem('tvIp', '192.168.1.100');
+                    localStorage.setItem('tvPort', '1925');
+                    localStorage.setItem('tvApiVersion', '1');
+                    localStorage.setItem('tvName', '55" Philips 7304');
+                    document.getElementById('tvTitle').textContent = '55" PHILIPS 7304';
+                    document.getElementById('volumeSlider').value = 21;
+                    document.getElementById('volumeValue').textContent = '21';
+                    showStatus('connected', 'Connected');
+                    renderExtraButtons();
+                } else if (localStorage.getItem('_mock') === 'samsung') {
+                    localStorage.setItem('tvBrand', 'samsung');
+                    localStorage.setItem('tvIp', '192.168.1.101');
+                    localStorage.setItem('tvPort', '8001');
+                    localStorage.setItem('tvName', 'Samsung Q8 Series');
+                    document.getElementById('tvTitle').textContent = 'SAMSUNG Q8 SERIES';
+                    document.getElementById('volumeSlider').value = 35;
+                    document.getElementById('volumeValue').textContent = '35';
+                    showStatus('connected', 'Connected');
+                    renderExtraButtons();
+                } else if (localStorage.getItem('_mock') === 'lg') {
+                    localStorage.setItem('tvBrand', 'lg');
+                    localStorage.setItem('tvIp', '192.168.1.102');
+                    localStorage.setItem('tvPort', '3000');
+                    localStorage.setItem('tvName', 'LG OLED C3');
+                    document.getElementById('tvTitle').textContent = 'LG OLED C3';
+                    document.getElementById('volumeSlider').value = 18;
+                    document.getElementById('volumeValue').textContent = '18';
+                    showStatus('connected', 'Connected');
+                    renderExtraButtons();
+                } else {
+                    // No TV configured — show brand selection
+                    document.getElementById('brandSelectScreen').classList.add('active');
+                }
                 await initRevenueCat();
             }
         })();
