@@ -834,7 +834,7 @@
             </div>
         </div>
 
-        <div class="divider" style="max-width:340px;width:100;">or enter IP manually</div>
+        <div class="divider" style="max-width:340px;width:100%;">or enter IP manually</div>
         <div class="setup-manual" style="max-width:340px;width:100%;">
             <input type="text" id="brandIpInput" placeholder="192.168.1.100" inputmode="decimal">
             <div style="display:flex;gap:8px;margin-top:4px;">
@@ -1813,7 +1813,6 @@
         // TV DRIVERS — multi-brand abstraction
         // ============================================================
 
-        let currentDriver = null;
         let _lgWs = null;        // LG SSAP WebSocket
         let _lgPointerWs = null; // LG pointer input socket
         let _lgClientKey = null;
@@ -2028,7 +2027,11 @@
                     }
                 };
                 _lgWs.onerror = (e) => reject(e);
-                _lgWs.onclose = () => { _lgWs = null; _lgPointerWs = null; };
+                _lgWs.onclose = () => {
+                    _lgWs = null; _lgPointerWs = null;
+                    for (const id in _lgPending) { _lgPending[id].reject(new Error('WebSocket closed')); }
+                    _lgPending = {};
+                };
                 setTimeout(() => reject(new Error('LG connection timeout')), 30000);
             });
         }
@@ -2263,6 +2266,7 @@
         async function _xiaomiGetVolume() {
             const ip = localStorage.getItem('tvIp');
             try {
+                // "getVolum" is the actual Xiaomi API endpoint name (not a typo)
                 const r = await fetch(`http://${ip}:6095/general?action=getVolum`);
                 if (!r.ok) return null;
                 const d = await r.json();
@@ -2378,6 +2382,7 @@
                     _samsungProbe(ip).catch(()=>null),
                     _sonyProbe(ip).catch(()=>null),
                     _rokuProbe(ip,'tcl').catch(()=>null),
+                    _rokuProbe(ip,'hisense').catch(()=>null),
                     _xiaomiProbe(ip).catch(()=>null),
                 ]));
                 results.forEach(r => { if (r) allTvs.push(r); });
@@ -2463,12 +2468,6 @@
                     setTimeout(() => resolve(null), 2500);
                 } catch { resolve(null); }
             });
-        }
-
-        // Probe one IP for a specific brand TV
-        async function probeTvDirect(ip, port) {
-            const brand = getBrand();
-            return await driverProbe(ip, brand);
         }
 
         // Scan /24 subnet for the current brand
@@ -3002,9 +3001,6 @@
             const closeUi = () => document.getElementById('brandSelectScreen').classList.remove('active');
             await _connectTv(ip, port, apiVersion, name, closeUi);
         }
-
-        // Override selectTv for brandScan context
-        const _origSelectTv = typeof selectTv === 'function' ? selectTv : null;
 
         // ============================================================
         // INIT
