@@ -10,7 +10,7 @@ Classic Remote — multi-brand TV remote control app. Supports Philips, LG, Sams
 
 ```
 server.py                              ← Python proxy: serves www/, proxies /api/* to TV (browser mode only)
-www/index.html                         ← Single-file web UI (HTML + CSS + JS inline), ~3000 lines
+www/index.html                         ← Single-file web UI (HTML + CSS + JS inline), ~3070 lines
 ios/App/App/AppDelegate.swift          ← Registers WKScriptMessageHandler for tvConfig bridge
 ios/App/App/TvConfigHandler.swift      ← Saves TV config (ip/port/brand/token/psk) to App Group UserDefaults
 ios/App/App/TvConfigPlugin.swift       ← Capacitor plugin stub (secondary approach, not primary)
@@ -114,6 +114,8 @@ ssh zloi2ff@192.168.31.73 "sudo systemctl restart philips-remote"
 - **Optional `API_TOKEN`** — env var for shared-secret auth on `/api/*`, `/config`, `/discover`, `/probe`; checked via `hmac.compare_digest`. Absent = open access.
 - **CORS restricted** — `Access-Control-Allow-Origin: *` only on `/api/*` proxy responses. `/config`, `/discover`, `/probe` have no CORS headers.
 - **`apiFetch()`** — for Philips v6+Capacitor always delegates to `digestFetch()`. Other brands use their own send functions.
+- **Adaptive layout** — `@media (min-height: 800px)` increases button sizes for Pro Max and tall screens. Color buttons placed above sources to avoid ad banner overlap.
+- **Widget audio feedback** — `AudioServicesPlaySystemSound(1104)` in each AppIntent `perform()` (haptics not available in widget extensions).
 
 ## Widget Architecture
 
@@ -132,7 +134,8 @@ ssh zloi2ff@192.168.31.73 "sudo systemctl restart philips-remote"
 - **Free**: AdMob banner (`@capacitor-community/admob`)
 - **Pro**: RevenueCat IAP (`@revenuecat/purchases-capacitor`) — entitlement `pro`, product `remove_ads`
 - Config object `MONETIZATION` in `www/index.html` (~line 1092) has all placeholder IDs
-- Currently using **Google test AdMob IDs** — replace before App Store. See `RELEASE_CHECKLIST.md`.
+- AdMob uses **real production IDs**. RevenueCat uses **test key** — replace with `appl_` production key before enabling IAP. See `RELEASE_CHECKLIST.md`.
+- App Store name: **Classic TV Remote Control** (Bundle ID: `com.philips.remote`)
 - Privacy policy: https://zloi2ff.github.io/classic-remote/
 
 ## Deployment
