@@ -377,11 +377,10 @@
 
         /* Color buttons */
         .color-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-        .color-row .btn { height: 30px; border: none; }
-        /* Safari flexbox scroll bug: padding-bottom on overflow flex container is ignored.
-           Use margin-bottom on last child instead. */
+        .color-row .btn { min-height: 30px; height: 30px; border: none; }
+        .color-row { margin-bottom: 10px; padding: 2px 0; }
         .ad-visible .color-row {
-            margin-bottom: max(calc(env(safe-area-inset-bottom) + 100px), 130px);
+            margin-bottom: max(calc(env(safe-area-inset-bottom) + 80px), 100px);
         }
         .btn.color-red    { background: linear-gradient(180deg, var(--danger) 0%, #c0392b 100%); }
         .btn.color-green  { background: linear-gradient(180deg, #27ae60 0%, var(--green-dark) 100%); }
