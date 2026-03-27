@@ -378,8 +378,8 @@
         /* Color buttons */
         .color-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .color-row .btn { min-height: 30px; height: 30px; border: none; }
-        .color-row { margin-bottom: 10px; padding: 2px 0; }
-        .ad-visible .color-row {
+        .color-row { margin-bottom: 8px; padding: 2px 0; }
+        .ad-visible .sources {
             margin-bottom: max(calc(env(safe-area-inset-bottom) + 80px), 100px);
         }
         .btn.color-red    { background: linear-gradient(180deg, var(--danger) 0%, #c0392b 100%); }
@@ -971,6 +971,13 @@
                     </div>
                 </div>
 
+                <div class="color-row">
+                    <button class="btn color-red"    aria-label="Red" onclick="sendKey('Red')"></button>
+                    <button class="btn color-green"  aria-label="Green" onclick="sendKey('Green')"></button>
+                    <button class="btn color-yellow" aria-label="Yellow" onclick="sendKey('Yellow')"></button>
+                    <button class="btn color-blue"   aria-label="Blue" onclick="sendKey('Blue')"></button>
+                </div>
+
                 <div class="section">
                     <div class="section-title">Sources</div>
                     <div class="sources" id="sourcesGrid">
@@ -984,13 +991,6 @@
                         <button class="btn" onclick="setSource(33)">Blu-ray</button>
                         <button class="btn" onclick="setSource(32)">SCART</button>
                     </div>
-                </div>
-
-                <div class="color-row">
-                    <button class="btn color-red"    aria-label="Red" onclick="sendKey('Red')"></button>
-                    <button class="btn color-green"  aria-label="Green" onclick="sendKey('Green')"></button>
-                    <button class="btn color-yellow" aria-label="Yellow" onclick="sendKey('Yellow')"></button>
-                    <button class="btn color-blue"   aria-label="Blue" onclick="sendKey('Blue')"></button>
                 </div>
             </div>
         </div>
