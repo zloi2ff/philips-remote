@@ -1303,6 +1303,9 @@
         // ============================================================
 
         async function initRevenueCat() {
+            // RevenueCat disabled until production API key is configured.
+            // Test key (test_...) causes crash in App Store builds.
+            if (MONETIZATION.rcApiKeyIos.startsWith('test_')) return;
             if (!isNative()) {
                 // Not running as a native app — trust localStorage cache as-is
                 return;
