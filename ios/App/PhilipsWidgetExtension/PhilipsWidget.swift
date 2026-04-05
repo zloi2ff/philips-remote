@@ -2,6 +2,10 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
+#if canImport(Controls)
+import Controls
+#endif
+
 // MARK: - Design Tokens
 
 private enum Design {
@@ -222,6 +226,30 @@ private struct NotConfiguredView: View {
     }
 }
 
+// MARK: - Unsupported Brand (WebSocket-only: Samsung, LG)
+
+private struct UnsupportedBrandView: View {
+    let brand: String
+
+    private var brandName: String { BrandInfo.meta(for: brand).displayName }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "wifi.exclamationmark")
+                .font(.system(size: 28))
+                .foregroundStyle(Design.accent)
+            Text("Widget not available for \(brandName)")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Design.textSecondary)
+                .multilineTextAlignment(.center)
+            Text("Use the app instead")
+                .font(.system(size: 10))
+                .foregroundStyle(Design.textSecondary.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 // MARK: - Header
 
 private struct WidgetHeader: View {
@@ -292,6 +320,64 @@ private struct MediumWidgetView: View {
     }
 }
 
+// MARK: - Accessory Circular (Lock Screen — single Power button)
+
+private struct AccessoryCircularView: View {
+    var body: some View {
+        Button(intent: StandbyIntent()) {
+            Image(systemName: "power")
+                .font(.system(size: 24, weight: .semibold))
+                .widgetAccentable()
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Accessory Rectangular (Lock Screen — 4 buttons in a row)
+
+private struct AccessoryRectangularView: View {
+    var body: some View {
+        HStack(spacing: 8) {
+            Button(intent: VolumeUpIntent()) {
+                Image(systemName: "speaker.plus.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .widgetAccentable()
+            }
+            .buttonStyle(.plain)
+
+            Button(intent: VolumeDownIntent()) {
+                Image(systemName: "speaker.minus.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .widgetAccentable()
+            }
+            .buttonStyle(.plain)
+
+            Button(intent: MuteIntent()) {
+                Image(systemName: "speaker.slash.fill")
+                    .font(.system(size: 16, weight: .medium))
+                    .widgetAccentable()
+            }
+            .buttonStyle(.plain)
+
+            Button(intent: StandbyIntent()) {
+                Image(systemName: "power")
+                    .font(.system(size: 16, weight: .medium))
+                    .widgetAccentable()
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Accessory Inline (Lock Screen — text with icon)
+
+private struct AccessoryInlineView: View {
+    var body: some View {
+        Label("Classic Remote", systemImage: "tv")
+    }
+}
+
 // MARK: - Widget Entry View (size-aware)
 
 struct PhilipsWidgetEntryView: View {
@@ -299,16 +385,31 @@ struct PhilipsWidgetEntryView: View {
 
     @Environment(\.widgetFamily) private var family
 
+    private var isWebSocketBrand: Bool {
+        entry.tvBrand == "samsung" || entry.tvBrand == "lg"
+    }
+
     var body: some View {
         Group {
-            if !entry.isConfigured {
-                NotConfiguredView()
-            } else {
-                switch family {
-                case .systemMedium:
-                    MediumWidgetView(brand: entry.tvBrand)
-                default:
-                    SmallWidgetView(brand: entry.tvBrand)
+            switch family {
+            case .accessoryCircular:
+                AccessoryCircularView()
+            case .accessoryRectangular:
+                AccessoryRectangularView()
+            case .accessoryInline:
+                AccessoryInlineView()
+            default:
+                if !entry.isConfigured {
+                    NotConfiguredView()
+                } else if isWebSocketBrand {
+                    UnsupportedBrandView(brand: entry.tvBrand)
+                } else {
+                    switch family {
+                    case .systemMedium:
+                        MediumWidgetView(brand: entry.tvBrand)
+                    default:
+                        SmallWidgetView(brand: entry.tvBrand)
+                    }
                 }
             }
         }
@@ -322,6 +423,66 @@ struct PhilipsWidgetEntryView: View {
 struct PhilipsWidgetBundle: WidgetBundle {
     var body: some Widget {
         PhilipsWidget()
+        if #available(iOS 18.0, *) {
+            VolumeUpControl()
+            VolumeDownControl()
+            MuteControl()
+            PowerControl()
+        }
+    }
+}
+
+// MARK: - Control Center Controls (iOS 18+)
+
+@available(iOS 18.0, *)
+struct VolumeUpControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "VolumeUpControl") {
+            ControlWidgetButton(action: VolumeUpIntent()) {
+                Label("Volume Up", systemImage: "speaker.plus.fill")
+            }
+        }
+        .displayName("Volume Up")
+        .description("Increase TV volume.")
+    }
+}
+
+@available(iOS 18.0, *)
+struct VolumeDownControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "VolumeDownControl") {
+            ControlWidgetButton(action: VolumeDownIntent()) {
+                Label("Volume Down", systemImage: "speaker.minus.fill")
+            }
+        }
+        .displayName("Volume Down")
+        .description("Decrease TV volume.")
+    }
+}
+
+@available(iOS 18.0, *)
+struct MuteControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "MuteControl") {
+            ControlWidgetButton(action: MuteIntent()) {
+                Label("Mute", systemImage: "speaker.slash.fill")
+            }
+        }
+        .displayName("Mute")
+        .description("Mute TV audio.")
+    }
+}
+
+@available(iOS 18.0, *)
+struct PowerControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "PowerControl") {
+            ControlWidgetButton(action: StandbyIntent()) {
+                Label("Power", systemImage: "power")
+            }
+        }
+        .displayName("Power")
+        .description("Turn TV off (standby).")
     }
 }
 
@@ -341,8 +502,14 @@ struct PhilipsWidget: Widget {
             }
         }
         .configurationDisplayName("Classic Remote")
-        .description("Control volume and power from your Home Screen.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .description("Control volume and power from Home Screen or Lock Screen.")
+        .supportedFamilies([
+            .systemSmall,
+            .systemMedium,
+            .accessoryCircular,
+            .accessoryRectangular,
+            .accessoryInline,
+        ])
     }
 }
 
@@ -372,4 +539,22 @@ struct PhilipsWidget: Widget {
 } timeline: {
     PhilipsEntry(date: .now, tvIp: "192.168.1.100", isConfigured: true,  tvBrand: "philips")
     PhilipsEntry(date: .now, tvIp: nil,             isConfigured: false, tvBrand: "philips")
+}
+
+#Preview("Circular – Power", as: .accessoryCircular) {
+    PhilipsWidget()
+} timeline: {
+    PhilipsEntry(date: .now, tvIp: "192.168.1.100", isConfigured: true, tvBrand: "philips")
+}
+
+#Preview("Rectangular – Controls", as: .accessoryRectangular) {
+    PhilipsWidget()
+} timeline: {
+    PhilipsEntry(date: .now, tvIp: "192.168.1.100", isConfigured: true, tvBrand: "philips")
+}
+
+#Preview("Inline", as: .accessoryInline) {
+    PhilipsWidget()
+} timeline: {
+    PhilipsEntry(date: .now, tvIp: "192.168.1.100", isConfigured: true, tvBrand: "philips")
 }

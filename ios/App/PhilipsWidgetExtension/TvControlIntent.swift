@@ -391,3 +391,50 @@ struct StandbyIntent: AppIntent {
         return .result()
     }
 }
+
+// MARK: - AppShortcutsProvider
+
+struct ClassicRemoteShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: VolumeUpIntent(),
+            phrases: [
+                "Volume up with \(.applicationName)",
+                "Turn up the volume with \(.applicationName)",
+                "Increase TV volume with \(.applicationName)",
+            ],
+            shortTitle: "Volume Up",
+            systemImageName: "speaker.wave.3"
+        )
+        AppShortcut(
+            intent: VolumeDownIntent(),
+            phrases: [
+                "Volume down with \(.applicationName)",
+                "Turn down the volume with \(.applicationName)",
+                "Decrease TV volume with \(.applicationName)",
+            ],
+            shortTitle: "Volume Down",
+            systemImageName: "speaker.wave.1"
+        )
+        AppShortcut(
+            intent: MuteIntent(),
+            phrases: [
+                "Mute the TV with \(.applicationName)",
+                "Mute TV with \(.applicationName)",
+                "Silence the TV with \(.applicationName)",
+            ],
+            shortTitle: "Mute TV",
+            systemImageName: "speaker.slash"
+        )
+        AppShortcut(
+            intent: StandbyIntent(),
+            phrases: [
+                "Turn off the TV with \(.applicationName)",
+                "Turn off TV with \(.applicationName)",
+                "Put TV on standby with \(.applicationName)",
+            ],
+            shortTitle: "Turn Off TV",
+            systemImageName: "power"
+        )
+    }
+}

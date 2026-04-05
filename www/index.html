@@ -15,7 +15,7 @@
 
     <!-- Content Security Policy -->
     <!-- connect-src: * required because TV IP is arbitrary (user-configured) -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src *; img-src 'self' data:; media-src 'none'; object-src 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src * ws: wss:; img-src 'self' data:; media-src 'none'; object-src 'none';">
 
     <style>
         /* ============================================================
@@ -324,8 +324,77 @@
 
         .dpad .empty { background: transparent; }
 
+        /* LG Touchpad */
+        .touchpad-toggle {
+            display: none;
+            width: 100%;
+            margin-bottom: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            height: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .touchpad-toggle.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        /* touchpad-toggle visibility is controlled via JS (renderExtraButtons) */
+
+        .touchpad-area {
+            display: none;
+            width: 163px;
+            height: 163px;
+            border-radius: 16px;
+            border: 1px dashed var(--border);
+            background:
+                radial-gradient(circle, rgba(52,152,219,0.08) 0%, transparent 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(255,255,255,0.025) 15px, rgba(255,255,255,0.025) 16px),
+                repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(255,255,255,0.025) 15px, rgba(255,255,255,0.025) 16px),
+                var(--bg-tertiary);
+            position: relative;
+            touch-action: none;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        .touchpad-area::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .touchpad-area.touch-active {
+            border-color: var(--accent);
+            background:
+                radial-gradient(circle, rgba(52,152,219,0.18) 0%, transparent 70%),
+                repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(255,255,255,0.03) 15px, rgba(255,255,255,0.03) 16px),
+                repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(255,255,255,0.03) 15px, rgba(255,255,255,0.03) 16px),
+                var(--bg-tertiary);
+        }
+        .touchpad-ripple {
+            position: absolute;
+            border-radius: 50%;
+            width: 44px; height: 44px;
+            margin: -22px 0 0 -22px;
+            background: rgba(52, 152, 219, 0.35);
+            pointer-events: none;
+            animation: touchpad-ripple-anim 0.35s ease-out forwards;
+        }
+        @keyframes touchpad-ripple-anim {
+            from { opacity: 1; transform: scale(0.5); }
+            to   { opacity: 0; transform: scale(2.2); }
+        }
+
         /* Action row */
-        .action-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .action-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
         .action-row .btn { height: 38px; font-size: 12px; font-weight: 500; }
 
         /* Expand button */
@@ -375,6 +444,12 @@
         .sources { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
         .sources .btn { font-size: 9px; height: 32px; padding: 4px; }
 
+        /* App Launchers */
+        .app-launchers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+        .app-launchers .btn { font-size: 9px; height: 38px; padding: 4px; flex-direction: column; gap: 2px; }
+        .app-launchers .btn .app-icon { font-size: 15px; line-height: 1; }
+        .app-launchers .btn .app-label { font-size: 8px; line-height: 1; }
+
         /* Color buttons */
         .color-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
         .color-row .btn { min-height: 30px; height: 30px; border: none; }
@@ -396,12 +471,14 @@
             .dpad { grid-template-columns: 60px 60px 60px; grid-template-rows: 60px 60px 60px; gap: 4px; }
             .dpad .btn { width: 60px; height: 60px; font-size: 22px; }
             .dpad .btn.ok { font-size: 15px; }
+            .touchpad-area { width: 188px; height: 188px; }
             .action-row .btn { height: 44px; font-size: 13px; }
             .volume-slider { padding: 12px 16px; }
             .btn.power { width: 46px; height: 46px; }
             .btn.settings-btn { width: 46px; height: 46px; }
             .playback-row .btn { height: 40px; }
             .sources .btn { height: 36px; }
+            .app-launchers .btn { height: 44px; }
             .color-row .btn { height: 34px; }
         }
 
@@ -416,8 +493,9 @@
             z-index: 900;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             padding: 30px;
+            padding-top: max(env(safe-area-inset-top, 0px), 30px);
+            overflow-y: auto;
         }
 
         .setup-screen.active { display: flex; }
@@ -445,6 +523,46 @@
 
         .setup-manual input:focus { border-color: var(--accent); }
         .setup-manual .btn.primary { width: 100%; height: 44px; font-size: 14px; background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%); border: none; border-radius: 10px; }
+
+        /* Supported TVs info block */
+        .tv-info-block {
+            width: 100%; max-width: 280px; margin-bottom: 16px;
+        }
+        .tv-info-warn {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 11px; color: var(--text-secondary);
+            background: rgba(241,196,15,0.1); border: 1px solid rgba(241,196,15,0.25);
+            border-radius: 8px; padding: 8px 10px; margin-bottom: 8px;
+        }
+        .tv-info-toggle {
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; background: none; border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px 12px; cursor: pointer;
+            color: var(--text-secondary); font-size: 12px; font-weight: 500;
+            transition: background 0.15s;
+        }
+        .tv-info-toggle:active { background: var(--bg-secondary); }
+        .tv-info-toggle svg { transition: transform 0.2s; }
+        .tv-info-toggle.open svg { transform: rotate(180deg); }
+        .tv-info-details {
+            display: none; border: 1px solid var(--border); border-top: none;
+            border-radius: 0 0 8px 8px; padding: 10px 12px;
+            background: var(--bg-secondary); margin-top: -1px;
+        }
+        .tv-info-details.open { display: block; }
+        .tv-info-details h4 {
+            font-size: 11px; font-weight: 600; color: var(--text-primary);
+            margin: 0 0 4px; text-align: left;
+        }
+        .tv-info-details h4:not(:first-child) { margin-top: 10px; }
+        .tv-info-details ul {
+            list-style: none; padding: 0; margin: 0;
+        }
+        .tv-info-details li {
+            font-size: 11px; color: var(--text-secondary); padding: 2px 0;
+            display: flex; align-items: flex-start; gap: 6px; text-align: left;
+        }
+        .tv-info-details li::before { content: '•'; color: var(--accent); flex-shrink: 0; }
 
         /* ============================================================
            TV DISCOVERY MODAL
@@ -759,6 +877,7 @@
             padding: 24px; padding-top: calc(24px + env(safe-area-inset-top));
         }
         .brand-screen.active { display: flex; }
+        .brand-screen { overflow-y: auto; }
         .brand-screen h1 { font-size: 22px; margin: 0 0 6px; }
         .brand-screen > p { font-size: 13px; color: var(--text-secondary); margin: 0 0 24px; text-align: center; }
         .brand-grid {
@@ -861,11 +980,26 @@
 
     <!-- Setup Screen (shown after brand selected, for brand-specific discovery) -->
     <div class="setup-screen" id="setupScreen">
+        <button onclick="goBackToBrandSelect()" style="position:absolute;top:max(env(safe-area-inset-top,0px),12px);left:12px;background:none;border:none;color:var(--accent);font-size:15px;padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:4px;z-index:1;">
+            <svg width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1 L1 8 L9 15"/></svg>
+            Back
+        </button>
         <h1>Classic Remote</h1>
         <p id="setupBrandMsg">Find your TV on the network or enter IP manually</p>
         <p style="font-size:12px;color:var(--text-secondary);margin:-16px 0 24px 0;" id="setupWifiHint">
             ⚠️ Make sure your phone is connected to the <strong>2.4 GHz</strong> Wi-Fi network.
         </p>
+
+        <div class="tv-info-block" id="tvInfoBlock">
+            <div class="tv-info-warn">
+                <span>⏱</span> Scanning may take up to 2 minutes. Make sure your TV is ON.
+            </div>
+            <button class="tv-info-toggle" id="tvInfoToggle" onclick="toggleTvInfo()">
+                <span>ℹ️ Supported TVs &amp; Tips</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="tv-info-details" id="tvInfoDetails"></div>
+        </div>
 
         <button class="discover-btn" id="setupScanBtn" onclick="startDiscovery('setup')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -890,7 +1024,7 @@
     <div class="page active" id="tvPage">
         <div class="main-content">
             <div class="top-header">
-                <button class="btn power" aria-label="Power" onclick="sendKey('Power')">
+                <button class="btn power" aria-label="Power" onclick="confirmPower()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M12 2v10M18.4 6.6a9 9 0 1 1-12.8 0"/>
                     </svg>
@@ -915,6 +1049,8 @@
                 </div>
             </div>
 
+            <button class="touchpad-toggle" id="touchpadToggleBtn" onclick="toggleLgTouchpad()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="3"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Touchpad</button>
+
             <div class="nav-row">
                 <button class="btn" onclick="sendKey('Home')">Home</button>
                 <button class="btn" onclick="sendKey('Source')">Source</button>
@@ -930,7 +1066,7 @@
                 </div>
 
                 <div class="dpad-container">
-                    <div class="dpad">
+                    <div class="dpad" id="dpadGrid">
                         <div class="empty"></div>
                         <button class="btn" aria-label="Up" onclick="sendKey('Up')">▲</button>
                         <div class="empty"></div>
@@ -941,6 +1077,7 @@
                         <button class="btn" aria-label="Down" onclick="sendKey('Down')">▼</button>
                         <div class="empty"></div>
                     </div>
+                    <div class="touchpad-area" id="lgTouchpadArea" aria-label="Touchpad: swipe to move cursor, tap to click, two-finger scroll"></div>
                 </div>
 
                 <div class="side-controls">
@@ -955,6 +1092,7 @@
                 <button class="btn" onclick="sendKey('Back')">← Back</button>
                 <button class="btn" onclick="sendKey('Find')">Search</button>
                 <button class="btn" onclick="sendKey('Adjust')">Adjust</button>
+                <button class="btn" id="sleepBtn" onclick="openSleepModal()">Sleep</button>
             </div>
         </div>
 
@@ -999,6 +1137,11 @@
                         <button class="btn" onclick="setSource(33)">Blu-ray</button>
                         <button class="btn" onclick="setSource(32)">SCART</button>
                     </div>
+                </div>
+
+                <div class="section" id="appLaunchersSection" style="display:none;">
+                    <div class="section-title">Apps</div>
+                    <div class="app-launchers" id="appLaunchersGrid"></div>
                 </div>
             </div>
         </div>
@@ -1052,6 +1195,39 @@
         </div>
     </div>
 
+    <!-- Sleep Timer Modal -->
+    <div class="modal-overlay" id="sleepModal" role="dialog" aria-modal="true">
+        <div class="modal" style="text-align:center;">
+            <h2 style="margin-bottom:4px;">Sleep Timer</h2>
+            <p id="sleepStatus" style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">TV will turn off automatically</p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+                <button class="btn" onclick="setSleepTimer(15)">15 min</button>
+                <button class="btn" onclick="setSleepTimer(30)">30 min</button>
+                <button class="btn" onclick="setSleepTimer(45)">45 min</button>
+                <button class="btn" onclick="setSleepTimer(60)">60 min</button>
+                <button class="btn" onclick="setSleepTimer(90)">90 min</button>
+                <button class="btn" onclick="setSleepTimer(120)">2 hrs</button>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="cancelSleepTimer()">Cancel Timer</button>
+                <button class="btn" onclick="closeSleepModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Power Confirmation Modal -->
+    <div class="modal-overlay" id="powerModal" role="dialog" aria-modal="true">
+        <div class="modal" style="text-align:center;">
+            <div style="font-size:40px;margin-bottom:12px;">&#9211;</div>
+            <h2 style="margin-bottom:8px;">Turn Off TV?</h2>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Are you sure you want to turn off the TV?</p>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closePowerModal()">Cancel</button>
+                <button class="btn" style="background:linear-gradient(180deg,#c0392b,#962020);color:#fff;" onclick="closePowerModal();sendKey('Power')">Turn Off</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Settings Page -->
     <div class="settings-page" id="settingsPage">
         <div class="settings-header">
@@ -1087,6 +1263,14 @@
                         </div>
                         <button class="settings-row-action" onclick="changeBrand()">Change</button>
                     </div>
+                </div>
+            </div>
+
+            <!-- Saved TVs -->
+            <div class="settings-section" id="savedTvsSection" style="display:none;">
+                <div class="settings-section-label">Saved TVs</div>
+                <div class="settings-card" id="savedTvsList">
+                    <!-- Dynamically populated by renderSavedTvs() -->
                 </div>
             </div>
 
@@ -1170,7 +1354,7 @@
                         <div class="settings-row-content">
                             <div class="settings-row-title">Author</div>
                         </div>
-                        <div class="settings-row-value">zloi2ff</div>
+                        <div class="settings-row-value">Andrii Chernykh — KULTURA</div>
                     </div>
                     <div class="settings-row settings-row-tappable" onclick="openPrivacyPolicy()">
                         <div class="settings-row-icon">🔒</div>
@@ -1225,7 +1409,7 @@
             rcApiKeyIos:    'test_tYhjwyNsOGueqEdStQKnwwSpUzw',       // RevenueCat iOS API key (test mode)
             entitlementId:  'pro',                                    // RevenueCat entitlement name — keep as-is
             productId:      'remove_ads',                             // App Store Connect IAP product ID — keep as-is
-            appStoreId:     'XXXXXXXXXX',                             // ← replace: numeric App Store ID (after first submission)
+            appStoreId:     '6761280476',                              // App Store ID
             privacyUrl:     'https://zloi2ff.github.io/classic-remote/',
             bugsUrl:        'https://github.com/zloi2ff/classic-remote/issues/new',
         };
@@ -1431,11 +1615,14 @@
             try {
                 const App = getPlugin('App');
                 const info = App ? await App.getInfo() : null;
-                document.getElementById('appVersionLabel').textContent = info?.version || '1.0.0';
+                const ver = info?.version || '1.0.0';
+                const build = info?.build || '';
+                document.getElementById('appVersionLabel').textContent = build ? `${ver} (${build})` : ver;
             } catch {}
 
             syncThemeSegmented();
             syncProUI();
+            renderSavedTvs();
             document.getElementById('settingsPage').classList.add('active');
         }
 
@@ -1448,6 +1635,10 @@
             localStorage.removeItem('tvPort');
             localStorage.removeItem('tvName');
             localStorage.removeItem('tvApiVersion');
+            // Clear widget App Group config
+            if (IS_CAPACITOR && window.webkit?.messageHandlers?.tvConfig) {
+                try { window.webkit.messageHandlers.tvConfig.postMessage({ip:'',port:0,apiVersion:0,brand:''}); } catch {}
+            }
             setTimeout(() => {
                 document.getElementById('brandSelectScreen').classList.add('active');
             }, 360);
@@ -1455,6 +1646,100 @@
 
         function closeSettingsPage() {
             document.getElementById('settingsPage').classList.remove('active');
+        }
+
+        // ============================================================
+        //  TV PROFILES
+        // ============================================================
+
+        const TV_PROFILES_KEY = 'tvProfiles';
+        const TV_PROFILES_MAX = 5;
+
+        /** @returns {Array<{ip:string,port:number,apiVersion:number,brand:string,name:string}>} */
+        function getProfiles() {
+            try { return JSON.parse(localStorage.getItem(TV_PROFILES_KEY) || '[]'); }
+            catch { return []; }
+        }
+
+        /** Add profile if not already present (matched by IP). */
+        function saveProfile(ip, port, apiVersion, brand, name) {
+            if (!ip) return;
+            const profiles = getProfiles();
+            const exists = profiles.findIndex(p => p.ip === ip);
+            const entry = { ip, port: Number(port) || 1925, apiVersion: Number(apiVersion) || 1, brand: brand || 'philips', name: name || 'TV' };
+            if (exists !== -1) {
+                profiles[exists] = entry; // update existing entry
+            } else {
+                if (profiles.length >= TV_PROFILES_MAX) profiles.splice(0, 1); // drop oldest when at limit
+                profiles.push(entry);
+            }
+            localStorage.setItem(TV_PROFILES_KEY, JSON.stringify(profiles));
+        }
+
+        /** Remove profile at given index and re-render. */
+        function deleteProfile(index) {
+            const profiles = getProfiles();
+            profiles.splice(index, 1);
+            localStorage.setItem(TV_PROFILES_KEY, JSON.stringify(profiles));
+            renderSavedTvs();
+        }
+
+        /** Switch active TV to saved profile at given index. */
+        async function switchToProfile(index) {
+            const profiles = getProfiles();
+            const p = profiles[index];
+            if (!p) return;
+            const currentIp = localStorage.getItem('tvIp');
+            if (currentIp === p.ip) { closeSettingsPage(); return; }
+            driverDisconnect();
+            stopPolling();
+            localStorage.setItem('tvBrand', p.brand);
+            closeSettingsPage();
+            await new Promise(r => setTimeout(r, 360));
+            await _connectTv(p.ip, p.port, p.apiVersion, p.name, () => {});
+        }
+
+        /** Auto-save current TV after successful connect. */
+        function updateProfileOnConnect() {
+            const ip         = localStorage.getItem('tvIp');
+            const port       = localStorage.getItem('tvPort');
+            const apiVersion = localStorage.getItem('tvApiVersion');
+            const brand      = localStorage.getItem('tvBrand');
+            const name       = localStorage.getItem('tvName');
+            if (ip) saveProfile(ip, port, apiVersion, brand, name);
+        }
+
+        /** Brand display icon mapping. */
+        const BRAND_ICONS = { philips: '💡', lg: '🟣', samsung: '🔵', sony: '⚫', tcl: '🔴', xiaomi: '🟠', hisense: '🟢' };
+
+        /** Populate the Saved TVs settings section. */
+        function renderSavedTvs() {
+            const profiles = getProfiles();
+            const section  = document.getElementById('savedTvsSection');
+            const list     = document.getElementById('savedTvsList');
+            if (!list) return;
+
+            if (profiles.length === 0) { section.style.display = 'none'; return; }
+            section.style.display = '';
+
+            const activeIp = localStorage.getItem('tvIp');
+            list.innerHTML = profiles.map((p, i) => {
+                const isActive  = p.ip === activeIp;
+                const icon      = BRAND_ICONS[p.brand] || '📺';
+                const brandName = (BRANDS[p.brand]?.name) || p.brand;
+                const subtitle  = escHtml(`${p.ip} \u00b7 ${brandName}`);
+                const sep       = i > 0 ? ' style="border-top:1px solid var(--settings-sep);"' : '';
+                const titleStyle = isActive ? ' style="color:var(--accent);"' : '';
+                return `<div class="settings-row settings-row-tappable"${sep} onclick="switchToProfile(${i})">` +
+                    `<div class="settings-row-icon">${icon}</div>` +
+                    `<div class="settings-row-content">` +
+                        `<div class="settings-row-title"${titleStyle}>${escHtml(p.name)}</div>` +
+                        `<div class="settings-row-subtitle">${subtitle}</div>` +
+                    `</div>` +
+                    (isActive ? `<div class="settings-row-value" style="color:var(--accent);font-size:18px;">&#10003;</div>` : '') +
+                    `<button class="settings-row-action" onclick="event.stopPropagation();deleteProfile(${i})" style="color:var(--danger);">Delete</button>` +
+                    `</div>`;
+            }).join('');
         }
 
         // Swipe-right to close settings page
@@ -1763,9 +2048,12 @@
 
             try {
                 const pairData = await _pairRequest(ip, port);
+                // Check if user cancelled while request was in-flight
+                if (!pairModal.classList.contains('active')) return;
                 msgEl.textContent = 'A PIN code appeared on your TV screen. Enter it below.';
                 _pairState = { ip, port, pairData, onSuccess };
             } catch (e) {
+                if (!pairModal.classList.contains('active')) return;
                 msgEl.textContent = '';
                 errEl.textContent = `Failed to start pairing: ${e.message}`;
                 errEl.style.display = 'block';
@@ -1833,6 +2121,112 @@
         let _lgPending = {};
         let _samsungWs = null;   // Samsung WebSocket
         let _samsungConnected = false;
+
+        // ---- LG touchpad mode ----
+        let _lgTouchpadMode = false;
+
+        function toggleLgTouchpad() {
+            if (getBrand() !== 'lg') return;
+            const available = _lgPointerWs && _lgPointerWs.readyState === WebSocket.OPEN;
+            if (!_lgTouchpadMode && !available) { showStatus('error', 'Connect to LG TV first'); return; }
+            _lgTouchpadMode = !_lgTouchpadMode;
+            _applyLgTouchpadUI();
+        }
+
+        function _applyLgTouchpadUI() {
+            const btn  = document.getElementById('touchpadToggleBtn');
+            const dpad = document.getElementById('dpadGrid');
+            const pad  = document.getElementById('lgTouchpadArea');
+            if (!btn || !dpad || !pad) return;
+            btn.classList.toggle('active', _lgTouchpadMode);
+            dpad.style.display = _lgTouchpadMode ? 'none' : '';
+            pad.style.display  = _lgTouchpadMode ? 'block' : 'none';
+        }
+
+        function _resetLgTouchpadMode() {
+            _lgTouchpadMode = false;
+            _applyLgTouchpadUI();
+        }
+
+        // Touchpad touch-event IIFE — locals kept scoped
+        (function _initLgTouchpad() {
+            const SENSITIVITY    = 1.5;
+            const CLICK_MAX_MOVE = 8;
+            const CLICK_MAX_MS   = 200;
+
+            let _tpStartX = 0, _tpStartY = 0, _tpStartT = 0;
+            let _tpLastX  = 0, _tpLastY  = 0;
+            let _tpMoved  = false;
+
+            function sendPtr(msg) {
+                if (_lgPointerWs && _lgPointerWs.readyState === WebSocket.OPEN) _lgPointerWs.send(msg);
+            }
+
+            function spawnRipple(pad, x, y) {
+                const r = document.createElement('div');
+                r.className = 'touchpad-ripple';
+                r.style.left = x + 'px';
+                r.style.top  = y + 'px';
+                pad.appendChild(r);
+                r.addEventListener('animationend', () => r.remove(), { once: true });
+            }
+
+            function onTouchStart(e) {
+                if (!_lgTouchpadMode) return;
+                e.preventDefault();
+                const t = e.touches[0];
+                _tpStartX = _tpLastX = t.clientX;
+                _tpStartY = _tpLastY = t.clientY;
+                _tpStartT = Date.now();
+                _tpMoved  = false;
+                this.classList.add('touch-active');
+            }
+
+            function onTouchMove(e) {
+                if (!_lgTouchpadMode) return;
+                e.preventDefault();
+                if (e.touches.length === 2) {
+                    const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    const dy = Math.round((cy - _tpLastY) * SENSITIVITY);
+                    if (dy !== 0) sendPtr('type:scroll\ndx:0\ndy:' + dy + '\n\n');
+                    _tpLastY = cy;
+                    return;
+                }
+                const t  = e.touches[0];
+                const dx = Math.round((t.clientX - _tpLastX) * SENSITIVITY);
+                const dy = Math.round((t.clientY - _tpLastY) * SENSITIVITY);
+                if (dx !== 0 || dy !== 0) {
+                    sendPtr('type:move\ndx:' + dx + '\ndy:' + dy + '\ndown:0\n\n');
+                    _tpMoved = true;
+                }
+                _tpLastX = t.clientX;
+                _tpLastY = t.clientY;
+            }
+
+            function onTouchEnd(e) {
+                if (!_lgTouchpadMode) return;
+                e.preventDefault();
+                this.classList.remove('touch-active');
+                const ct   = e.changedTouches[0];
+                const dt   = Date.now() - _tpStartT;
+                const dist = ct ? Math.hypot(ct.clientX - _tpStartX, ct.clientY - _tpStartY) : 0;
+                if (!_tpMoved && dt < CLICK_MAX_MS && dist < CLICK_MAX_MOVE) {
+                    sendPtr('type:click\n\n');
+                    if (ct) {
+                        const rect = this.getBoundingClientRect();
+                        spawnRipple(this, ct.clientX - rect.left, ct.clientY - rect.top);
+                    }
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const pad = document.getElementById('lgTouchpadArea');
+                if (!pad) return;
+                pad.addEventListener('touchstart', onTouchStart, { passive: false });
+                pad.addEventListener('touchmove',  onTouchMove,  { passive: false });
+                pad.addEventListener('touchend',   onTouchEnd,   { passive: false });
+            });
+        })();
 
         // LG WebOS registration payload (signed manifest — do not modify)
         const LG_REGISTRATION = {"forcePairing":false,"pairingType":"PROMPT","manifest":{"manifestVersion":1,"appVersion":"1.1","signed":{"created":"20140509","appId":"com.lge.test","vendorId":"com.lge","localizedAppNames":{"":"LG Remote App","ko-KR":"리모컨 앱","zxx-XX":"ЛГ Rэмotэ AПП"},"localizedVendorNames":{"":"LG Electronics"},"permissions":["TEST_SECURE","CONTROL_INPUT_TEXT","CONTROL_MOUSE_AND_KEYBOARD","READ_INSTALLED_APPS","READ_LGE_SDX","READ_NOTIFICATIONS","SEARCH","WRITE_SETTINGS","WRITE_NOTIFICATION_ALERT","CONTROL_POWER","READ_CURRENT_CHANNEL","READ_RUNNING_APPS","READ_UPDATE_INFO","UPDATE_FROM_REMOTE_APP","READ_LGE_TV_INPUT_EVENTS","READ_TV_CURRENT_TIME"],"serial":"2f930e2d2cfe083771f68e4fe7bb07"},"permissions":["LAUNCH","LAUNCH_WEBAPP","APP_TO_APP","CLOSE","TEST_OPEN","TEST_PROTECTED","CONTROL_AUDIO","CONTROL_DISPLAY","CONTROL_INPUT_JOYSTICK","CONTROL_INPUT_MEDIA_RECORDING","CONTROL_INPUT_MEDIA_PLAYBACK","CONTROL_INPUT_TV","CONTROL_POWER","READ_APP_STATUS","READ_CURRENT_CHANNEL","READ_INPUT_DEVICE_LIST","READ_NETWORK_STATE","READ_RUNNING_APPS","READ_TV_CHANNEL_LIST","WRITE_NOTIFICATION_TOAST","READ_POWER_STATE","READ_COUNTRY_INFO","READ_SETTINGS","CONTROL_TV_SCREEN","CONTROL_TV_STANBY","CONTROL_FAVORITE_GROUP","CONTROL_USER_INFO","CHECK_BLUETOOTH_DEVICE","CONTROL_BLUETOOTH","CONTROL_TIMER_INFO","STB_INTERNAL_CONNECTION","CONTROL_RECORDING","READ_RECORDING_STATE","WRITE_RECORDING_LIST","READ_RECORDING_LIST","READ_RECORDING_SCHEDULE","WRITE_RECORDING_SCHEDULE","READ_STORAGE_DEVICE_LIST","READ_TV_PROGRAM_INFO","CONTROL_BOX_CHANNEL","READ_TV_ACR_AUTH_TOKEN","READ_TV_CONTENT_STATE","READ_TV_CURRENT_TIME","ADD_LAUNCHER_CHANNEL","SET_CHANNEL_SKIP","RELEASE_CHANNEL_SKIP","CONTROL_CHANNEL_BLOCK","DELETE_SELECT_CHANNEL","CONTROL_CHANNEL_GROUP","SCAN_TV_CHANNELS","CONTROL_TV_POWER","CONTROL_WOL"],"signatures":[{"signatureVersion":1,"signature":"eyJhbGdvcml0aG0iOiJSU0EtU0hBMjU2Iiwia2V5SWQiOiJ0ZXN0LXNpZ25pbmctY2VydCIsInNpZ25hdHVyZVZlcnNpb24iOjF9.hrVRgjCwXVvE2OOSpDZ58hR+59aFNwYDyjQgKk3auukd7pcegmE2CzPCa0bJ0ZsRAcKkCTJrWo5iDzNhMBWRyaMOv5zWSrthlf7G128qvIlpMT0YNY+n/FaOHE73uLrS/g7swl3/qH/BGFG2Hu4RlL48eb3lLKqTt2xKHdCs6Cd4RMfJPYnzgvI4BNrFUKsjkcu+WD4OO2A27Pq1n50cMchmcaXadJhGrOqH5YmHdOCj5NSHzJYrsW0HPlpuAx/ECMeIZYDh6RMqaFM2DXzdKX9NmmyqzJ3o/0lkk/N97gfVRLW5hA29yeAwaCViZNCP8iC9aO0q9fQojoa7NQnAtw=="}]}};
@@ -1924,10 +2318,19 @@
             philips: [{label:'Ambilight',key:'AmbilightOnOff',icon:'💡'},{label:'Options',key:'Options',icon:'⚙️'}],
             lg: [{label:'Screen Share',key:'SCREEN_SHARE',icon:'📱'},{label:'My Apps',key:'MYAPPS',icon:'📦'}],
             samsung: [{label:'Smart Hub',key:'KEY_CONTENTS',icon:'🏠'},{label:'Ambient',key:'KEY_AMBIENT',icon:'🖼️'}],
-            sony: [{label:'Action Menu',key:'ActionMenu',icon:'🎬'},{label:'Netflix',key:'Netflix',icon:'🎬'},{label:'Google Assistant',key:'',icon:'🎙️'}],
+            sony: [{label:'Action Menu',key:'ActionMenu',icon:'🎬'},{label:'Netflix',key:'Netflix',icon:'🎬'}],
             tcl: [{label:'Star',key:'Info',icon:'⭐'},{label:'Instant Replay',key:'InstantReplay',icon:'🔄'}],
             xiaomi: [{label:'Menu',key:'menu',icon:'☰'}],
             hisense: [{label:'Star',key:'Info',icon:'⭐'}],
+        };
+
+        // App launcher definitions: per-brand app IDs/package names
+        // roku: Roku channel IDs (TCL + Hisense); xiaomi: Android package names
+        const APP_LAUNCHERS = {
+            netflix: { label: 'Netflix', icon: '🔴', brands: { lg: 'netflix', samsung: '3201907018807', roku: '12', xiaomi: 'com.netflix.ninja', sony: 'Netflix' }},
+            youtube: { label: 'YouTube', icon: '▶️', brands: { lg: 'youtube.leanback.v4', samsung: '111299001912', roku: '837', xiaomi: 'com.google.android.youtube.tv' }},
+            disney:  { label: 'Disney+', icon: '🏰', brands: { lg: 'com.disney.disneyplus-prod', samsung: '3201907018784', roku: '291097' }},
+            prime:   { label: 'Prime',   icon: '📦', brands: { lg: 'amazon', samsung: '3201910019365', roku: '13' }},
         };
 
         // Brand display config
@@ -2045,7 +2448,7 @@
                     for (const id in _lgPending) { _lgPending[id].reject(new Error('WebSocket closed')); }
                     _lgPending = {};
                 };
-                setTimeout(() => reject(new Error('LG connection timeout')), 30000);
+                setTimeout(() => { try { _lgWs?.close(); } catch {} reject(new Error('LG connection timeout')); }, 15000);
             });
         }
 
@@ -2146,8 +2549,8 @@
                     }
                 };
                 _samsungWs.onerror = (e) => reject(e);
-                _samsungWs.onclose = () => { _samsungWs = null; _samsungConnected = false; };
-                setTimeout(() => reject(new Error('Samsung connection timeout')), 30000);
+                _samsungWs.onclose = () => { _samsungWs = null; _samsungConnected = false; reject(new Error('WebSocket closed')); };
+                setTimeout(() => { try { _samsungWs?.close(); } catch {} reject(new Error('Samsung connection timeout')); }, 15000);
             });
         }
 
@@ -2315,7 +2718,7 @@
             switch (brand) {
                 case 'philips': return await _philipsSendKey(mapped);
                 case 'lg':      return await _lgSendKey(mapped);
-                case 'samsung': return _samsungSendKey(mapped);
+                case 'samsung': return await _samsungSendKey(mapped);
                 case 'sony':    return await _sonySendKey(mapped);
                 case 'tcl':
                 case 'hisense': return await _rokuSendKey(mapped);
@@ -2374,6 +2777,7 @@
             if (_lgWs) { try{_lgWs.close();}catch{} _lgWs = null; }
             if (_lgPointerWs) { try{_lgPointerWs.close();}catch{} _lgPointerWs = null; }
             if (_samsungWs) { try{_samsungWs.close();}catch{} _samsungWs = null; _samsungConnected = false; }
+            _resetLgTouchpadMode();
         }
 
         async function driverProbe(ip, brand) {
@@ -2615,21 +3019,27 @@
         // Connect to a TV, triggering pairing if needed.
         async function _connectTv(ip, port, apiVersion, name, closeUiFn) {
             const brand = getBrand();
-            await saveConfig(ip, port, apiVersion);
-            localStorage.setItem('tvName', name || 'TV');
-            localStorage.setItem('tvApiVersion', String(apiVersion || 1));
             const brandInfo = BRANDS[brand];
-            document.getElementById('tvTitle').textContent = (name || brandInfo?.name || 'TV').toUpperCase();
-            closeUiFn();
 
-            // Philips v6 pairing
+            // Philips v6 pairing — don't save config until pairing succeeds
             if (brand === 'philips' && IS_CAPACITOR && apiVersion >= 6 && !_getTvCredentials(ip)) {
+                document.getElementById('tvTitle').textContent = (name || brandInfo?.name || 'TV').toUpperCase();
+                closeUiFn();
                 await startPairing(ip, port, async () => {
                     await saveConfig(ip, port, apiVersion);
+                    localStorage.setItem('tvName', name || 'TV');
+                    localStorage.setItem('tvApiVersion', String(apiVersion || 1));
+                    updateProfileOnConnect();
                     await _postConnectLoad();
                 });
                 return;
             }
+
+            await saveConfig(ip, port, apiVersion);
+            localStorage.setItem('tvName', name || 'TV');
+            localStorage.setItem('tvApiVersion', String(apiVersion || 1));
+            document.getElementById('tvTitle').textContent = (name || brandInfo?.name || 'TV').toUpperCase();
+            closeUiFn();
 
             // Sony PSK prompt
             if (brand === 'sony' && !localStorage.getItem('tvPsk_' + ip)) {
@@ -2637,6 +3047,7 @@
                 if (psk) localStorage.setItem('tvPsk_' + ip, psk);
             }
 
+            updateProfileOnConnect();
             await _postConnectLoad();
         }
 
@@ -2649,12 +3060,11 @@
             // WebSocket-based brands need explicit connection
             if (brand === 'lg' || brand === 'samsung') {
                 try {
-                    await driverConnect();
+                    const connected = await driverConnect();
+                    if (!connected) { showStatus('error', 'Connection denied or failed'); return; }
                     showStatus('connected', 'Connected');
-                    // LG supports volume polling
-                    if (brand === 'lg') startPolling();
-                    else startPolling(); // Samsung: polling will just show connected
-                    renderExtraButtons();
+                    startPolling();
+                    renderExtraButtons(); renderAppLaunchers();
                     return;
                 } catch (e) {
                     showStatus('error', e.message || 'Connection failed');
@@ -2672,7 +3082,7 @@
                     document.getElementById('volumeValue').textContent = vol.current ?? '';
                     showStatus('connected', 'Connected');
                     startPolling();
-                    renderExtraButtons();
+                    renderExtraButtons(); renderAppLaunchers();
                     if (brand === 'philips') loadTvCapabilities();
                     return;
                 }
@@ -2680,11 +3090,11 @@
                 if (brand === 'tcl' || brand === 'hisense' || brand === 'xiaomi') {
                     showStatus('connected', 'Connected');
                     startPolling();
-                    renderExtraButtons();
+                    renderExtraButtons(); renderAppLaunchers();
                     return;
                 }
                 if (++attempts < 5) setTimeout(tryConnect, 2000);
-                else { showStatus('error', 'Offline'); startPolling(); renderExtraButtons(); }
+                else { showStatus('error', 'Offline'); startPolling(); renderExtraButtons(); renderAppLaunchers(); }
             };
             tryConnect();
         }
@@ -2692,6 +3102,9 @@
         // Render brand-specific extra buttons in the collapsible section
         function renderExtraButtons() {
             const brand = getBrand();
+            // Show/hide LG touchpad toggle button based on current brand
+            const tBtn = document.getElementById('touchpadToggleBtn');
+            if (tBtn) tBtn.style.display = (brand === 'lg') ? 'flex' : 'none';
             const extra = EXTRA_BUTTONS[brand] || [];
             let container = document.getElementById('extraBrandBtns');
             if (!container) {
@@ -2715,6 +3128,102 @@
             } else if (container) {
                 container.innerHTML = '';
             }
+        }
+
+        // ============================================================
+        // APP LAUNCHER
+        // ============================================================
+
+        async function _lgLaunchApp(appId) {
+            try { await _lgRequest('ssap://system.launcher/launch', {id: appId}); return true; }
+            catch { return false; }
+        }
+
+        function _samsungLaunchApp(appId) {
+            if (!_samsungWs || !_samsungConnected) return false;
+            _samsungWs.send(JSON.stringify({
+                method: 'ms.channel.emit',
+                params: { event: 'ed.apps.launch', to: 'host', data: { appId, action_type: 'DEEP_LINK' } },
+            }));
+            return true;
+        }
+
+        async function _rokuLaunchApp(channelId) {
+            const ip   = localStorage.getItem('tvIp');
+            const port = localStorage.getItem('tvPort') || '8060';
+            try {
+                const r = await fetch(`http://${ip}:${port}/launch/${encodeURIComponent(channelId)}`, { method: 'POST' });
+                return r.ok || r.status === 200;
+            } catch { return false; }
+        }
+
+        async function _xiaomiLaunchApp(packageName) {
+            const ip = localStorage.getItem('tvIp');
+            try {
+                const r = await fetch(`http://${ip}:6095/controller?action=startapp&type=packagename&packagename=${encodeURIComponent(packageName)}`);
+                return r.ok;
+            } catch { return false; }
+        }
+
+        async function _sonyLaunchApp(irccKey) {
+            // Sony uses IRCC key name (e.g. 'Netflix') stored in SONY_IRCC
+            return await _sonySendKey(irccKey);
+        }
+
+        async function launchApp(appKey) {
+            const brand = getBrand();
+            const app   = APP_LAUNCHERS[appKey];
+            if (!app) return;
+            const brandData = app.brands;
+
+            let ok = false;
+            try {
+                switch (brand) {
+                    case 'lg':
+                        ok = brandData.lg ? await _lgLaunchApp(brandData.lg) : false;
+                        break;
+                    case 'samsung':
+                        ok = brandData.samsung ? _samsungLaunchApp(brandData.samsung) : false;
+                        break;
+                    case 'tcl':
+                    case 'hisense':
+                        ok = brandData.roku ? await _rokuLaunchApp(brandData.roku) : false;
+                        break;
+                    case 'xiaomi':
+                        ok = brandData.xiaomi ? await _xiaomiLaunchApp(brandData.xiaomi) : false;
+                        break;
+                    case 'sony':
+                        ok = brandData.sony ? await _sonyLaunchApp(brandData.sony) : false;
+                        break;
+                    default:
+                        ok = false;
+                }
+            } catch { ok = false; }
+            showStatus(ok ? 'connected' : 'error', ok ? 'Launching...' : 'Not supported');
+        }
+
+        function renderAppLaunchers() {
+            const brand   = getBrand();
+            const section = document.getElementById('appLaunchersSection');
+            const grid    = document.getElementById('appLaunchersGrid');
+            if (!section || !grid) return;
+
+            // tcl/hisense share the 'roku' key in APP_LAUNCHERS
+            const brandKey = (brand === 'tcl' || brand === 'hisense') ? 'roku' : brand;
+            const supported = Object.entries(APP_LAUNCHERS).filter(([, app]) => app.brands[brandKey]);
+            if (supported.length === 0) { section.style.display = 'none'; return; }
+
+            section.style.display = '';
+            grid.innerHTML = supported.map(([key, app]) =>
+                `<button class="btn app-launcher-btn" data-app="${escHtml(key)}" aria-label="Launch ${escHtml(app.label)}">` +
+                `<span class="app-icon">${app.icon}</span>` +
+                `<span class="app-label">${escHtml(app.label)}</span>` +
+                `</button>`
+            ).join('');
+            grid.querySelectorAll('.app-launcher-btn').forEach(btn => {
+                btn.addEventListener('click', () => launchApp(btn.dataset.app));
+            });
+            attachTouchFeedback(grid.querySelectorAll('.btn'));
         }
 
         async function selectTv(ip, port, apiVersion, name, el, context) {
@@ -2824,15 +3333,22 @@
         // HAPTIC & BUTTON FEEDBACK
         // ============================================================
 
-        function haptic() {
+        function haptic(style) {
             const Haptics = getPlugin('Haptics');
-            if (Haptics) try { Haptics.impact({ style: 'Light' }); } catch {}
+            if (Haptics) try { Haptics.impact({ style: style || 'Light' }); } catch {}
+        }
+
+        function getHapticStyle(btn) {
+            if (btn.classList.contains('power')) return 'Heavy';
+            if (btn.closest('.dpad')) return 'Medium';
+            if (btn.classList.contains('ok')) return 'Medium';
+            return 'Light';
         }
 
         function attachTouchFeedback(buttons) {
             buttons.forEach(btn => {
                 btn.addEventListener('touchstart', function() {
-                    this.classList.add('flash'); haptic();
+                    this.classList.add('flash'); haptic(getHapticStyle(this));
                 }, { passive: true });
                 btn.addEventListener('touchend', function() {
                     this.classList.remove('flash');
@@ -2860,10 +3376,82 @@
                 content.classList.contains('expanded') ? 'Less controls' : 'More controls';
         }
 
+        // Power confirmation
+        function confirmPower() {
+            document.getElementById('powerModal').classList.add('active');
+        }
+        function closePowerModal() {
+            document.getElementById('powerModal').classList.remove('active');
+        }
+
+        // Sleep Timer
+        let _sleepTimer = null;
+        let _sleepEndTime = null;
+        let _sleepTickInterval = null;
+
+        function openSleepModal() {
+            updateSleepStatus();
+            document.getElementById('sleepModal').classList.add('active');
+        }
+        function closeSleepModal() {
+            document.getElementById('sleepModal').classList.remove('active');
+        }
+        function setSleepTimer(minutes) {
+            cancelSleepTimer(true);
+            _sleepEndTime = Date.now() + minutes * 60000;
+            _sleepTimer = setTimeout(async () => {
+                _sleepTimer = null; _sleepEndTime = null;
+                clearInterval(_sleepTickInterval); _sleepTickInterval = null;
+                await sendKey('Power');
+                updateSleepBtn();
+            }, minutes * 60000);
+            _sleepTickInterval = setInterval(updateSleepBtn, 30000);
+            updateSleepStatus();
+            updateSleepBtn();
+            closeSleepModal();
+        }
+        function cancelSleepTimer(silent) {
+            if (_sleepTimer) clearTimeout(_sleepTimer);
+            if (_sleepTickInterval) clearInterval(_sleepTickInterval);
+            _sleepTimer = null; _sleepEndTime = null; _sleepTickInterval = null;
+            updateSleepBtn();
+            if (!silent) updateSleepStatus();
+        }
+        function updateSleepStatus() {
+            const el = document.getElementById('sleepStatus');
+            if (_sleepEndTime) {
+                const mins = Math.max(1, Math.round((_sleepEndTime - Date.now()) / 60000));
+                el.textContent = `Timer active: ${mins} min remaining`;
+            } else {
+                el.textContent = 'TV will turn off automatically';
+            }
+        }
+        function updateSleepBtn() {
+            const btn = document.getElementById('sleepBtn');
+            if (!btn) return;
+            if (_sleepEndTime) {
+                const mins = Math.max(1, Math.round((_sleepEndTime - Date.now()) / 60000));
+                btn.textContent = `${mins}m`;
+                btn.style.color = 'var(--accent)';
+            } else {
+                btn.textContent = 'Sleep';
+                btn.style.color = '';
+            }
+        }
+
         async function sendKey(key) {
             try {
                 const ok = await driverSendKey(key);
                 showStatus(ok ? 'connected' : 'error', ok ? 'Connected' : 'Error');
+                // Smart review prompt after successful key sends
+                if (ok && IS_CAPACITOR) {
+                    const count = parseInt(localStorage.getItem('_keySuccessCount') || '0') + 1;
+                    localStorage.setItem('_keySuccessCount', String(count));
+                    if (count === 10 && !localStorage.getItem('_reviewPrompted')) {
+                        localStorage.setItem('_reviewPrompted', 'true');
+                        try { const AppReview = getPlugin('App'); if (AppReview?.requestReview) AppReview.requestReview(); } catch {}
+                    }
+                }
             } catch {
                 showStatus('error', 'Offline');
             }
@@ -2876,7 +3464,7 @@
             else {
                 // For brands without volume set, send volume keys
                 const brand = getBrand();
-                if (brand === 'samsung' || brand === 'tcl' || brand === 'hisense') {
+                if (brand === 'samsung' || brand === 'tcl' || brand === 'hisense' || brand === 'xiaomi') {
                     showStatus('connected', `Vol: ${value}`);
                 } else {
                     showStatus('error', 'Offline');
@@ -2897,7 +3485,7 @@
                 } else if (brand === 'sony') {
                     await _sonyRpc('avContent','setPlayContent',[{uri:id}]);
                 } else if (brand === 'tcl' || brand === 'hisense') {
-                    await fetch(`http://${localStorage.getItem('tvIp')}:${localStorage.getItem('tvPort')||8060}/keypress/${id}`, {method:'POST'});
+                    await fetch(`http://${localStorage.getItem('tvIp')}:${localStorage.getItem('tvPort')||8060}/keypress/${encodeURIComponent(id)}`, {method:'POST'});
                 }
                 showStatus('connected', 'Source OK');
             } catch {
@@ -2916,7 +3504,21 @@
                 // For brands without volume GET, just check connectivity
                 const brand = getBrand();
                 if (brand === 'samsung' && _samsungConnected) showStatus('connected', 'Connected');
-                else if (brand === 'tcl' || brand === 'hisense' || brand === 'xiaomi') showStatus('connected', 'Connected');
+                else if (brand === 'samsung' && !_samsungConnected) showStatus('error', 'Offline');
+                else if (brand === 'tcl' || brand === 'hisense' || brand === 'xiaomi') {
+                    // HTTP brands: do a quick probe to verify connectivity
+                    try {
+                        const tvIp = localStorage.getItem('tvIp');
+                        const tvPort = localStorage.getItem('tvPort');
+                        if (brand === 'xiaomi') {
+                            const r = await fetch(`http://${tvIp}:${tvPort || 6095}/request?action=isalive`, {signal: AbortSignal.timeout(3000)});
+                            showStatus(r.ok ? 'connected' : 'error', r.ok ? 'Connected' : 'Offline');
+                        } else {
+                            const r = await fetch(`http://${tvIp}:${tvPort || 8060}/query/device-info`, {signal: AbortSignal.timeout(3000)});
+                            showStatus(r.ok ? 'connected' : 'error', r.ok ? 'Connected' : 'Offline');
+                        }
+                    } catch { showStatus('error', 'Offline'); }
+                }
                 else showStatus('error', 'Offline');
             }
         }
@@ -2957,6 +3559,72 @@
         // BRAND SELECTION
         // ============================================================
 
+        const BRAND_INFO = {
+            philips: {
+                models: ['Android TV (2016+)', 'Saphi TV', 'Net TV'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network', 'Recommended: 2.4 GHz Wi-Fi band'],
+                connection: ['Android TV (v6): a PIN code will appear on your TV screen — enter it in the app to pair', 'Saphi / Net TV: connects automatically, no pairing needed']
+            },
+            lg: {
+                models: ['webOS Smart TV (2014 and newer)'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['A pairing prompt will appear on your TV screen — press "Allow" on your TV remote or screen', 'Widget remote is not available (WebSocket required)']
+            },
+            samsung: {
+                models: ['Tizen Smart TV (2016 and newer)'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['A permission prompt will appear on your TV screen — select "Allow"', 'Widget remote is not available (WebSocket required)']
+            },
+            sony: {
+                models: ['Android TV', 'Google TV with IRCC support'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['Set a Pre-Shared Key (PSK) on your TV first:', 'Settings → Network → Home Network → IP Control → Authentication → Normal and Pre-Shared Key', 'Enter the same PSK when prompted in the app']
+            },
+            tcl: {
+                models: ['Roku TV models only'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['No pairing needed — connects automatically', 'Non-Roku TCL TVs (Android/Google TV) are not supported']
+            },
+            xiaomi: {
+                models: ['Mi TV with MIUI system'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['No pairing needed — connects automatically', 'Note: Mute button is not available on Xiaomi TVs']
+            },
+            hisense: {
+                models: ['Roku TV models only'],
+                requirements: ['TV must be turned ON (not standby)', 'Phone and TV on the same Wi-Fi network'],
+                connection: ['No pairing needed — connects automatically', 'Non-Roku Hisense TVs (VIDAA, Android) are not supported']
+            }
+        };
+
+        function renderTvInfo(brand) {
+            const info = BRAND_INFO[brand];
+            if (!info) return;
+            const el = document.getElementById('tvInfoDetails');
+            el.innerHTML = `
+                <h4>Supported models</h4>
+                <ul>${info.models.map(m => `<li>${escHtml(m)}</li>`).join('')}</ul>
+                <h4>Requirements</h4>
+                <ul>${info.requirements.map(r => `<li>${escHtml(r)}</li>`).join('')}</ul>
+                <h4>First connection</h4>
+                <ul>${info.connection.map(c => `<li>${escHtml(c)}</li>`).join('')}</ul>
+            `;
+            // Reset collapsed state
+            el.classList.remove('open');
+            document.getElementById('tvInfoToggle').classList.remove('open');
+        }
+
+        function toggleTvInfo() {
+            document.getElementById('tvInfoToggle').classList.toggle('open');
+            document.getElementById('tvInfoDetails').classList.toggle('open');
+        }
+
+        function goBackToBrandSelect() {
+            localStorage.removeItem('tvBrand');
+            document.getElementById('setupScreen').classList.remove('active');
+            document.getElementById('brandSelectScreen').classList.add('active');
+        }
+
         function selectBrand(brand) {
             localStorage.setItem('tvBrand', brand);
             document.getElementById('brandSelectScreen').classList.remove('active');
@@ -2968,6 +3636,7 @@
             } else {
                 document.getElementById('setupWifiHint').style.display = 'none';
             }
+            renderTvInfo(brand);
         }
 
         async function scanAllBrands() {
@@ -3053,7 +3722,7 @@
                 // WebSocket brands need explicit connection
                 await driverConnect();
                 startPolling();
-                renderExtraButtons();
+                renderExtraButtons(); renderAppLaunchers();
             } else if (config?.ip && !brand) {
                 // Legacy: had Philips config but no brand set
                 localStorage.setItem('tvBrand', 'philips');
@@ -3064,7 +3733,7 @@
                 await Promise.all([loadTvCapabilities(), initRevenueCat()]);
                 if (!adsRemoved) await initAdMob();
                 startPolling();
-                renderExtraButtons();
+                renderExtraButtons(); renderAppLaunchers();
             } else {
                 // No TV configured — show brand selection
                 document.getElementById('brandSelectScreen').classList.add('active');

@@ -7,7 +7,6 @@
 	<key>NSPrivacyTrackingDomains</key>
 	<array>
 		<string>googleads.g.doubleclick.net</string>
-		<string>api.revenuecat.com</string>
 	</array>
 	<key>NSPrivacyCollectedDataTypes</key>
 	<array>
