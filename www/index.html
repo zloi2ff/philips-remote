@@ -962,7 +962,7 @@
 
         <div class="divider" style="max-width:340px;width:100%;">or enter IP manually</div>
         <div class="setup-manual" style="max-width:340px;width:100%;">
-            <input type="text" id="brandIpInput" placeholder="192.168.1.100" inputmode="decimal" oninput="this.value=this.value.replace(/,/g,'.')">
+            <input type="text" id="brandIpInput" placeholder="192.168.1.100" type="tel">
             <div style="display:flex;gap:8px;margin-top:4px;">
                 <select id="brandIpBrand" style="flex:1;padding:10px;border-radius:10px;background:var(--btn-from);color:var(--text-primary);border:1px solid var(--border);font-size:14px;">
                     <option value="philips">Philips</option>
@@ -1015,7 +1015,7 @@
         <div class="divider">or enter manually</div>
 
         <div class="setup-manual">
-            <input type="text" id="setupIpInput" placeholder="192.168.1.100" inputmode="decimal" oninput="this.value=this.value.replace(/,/g,'.')">
+            <input type="text" id="setupIpInput" placeholder="192.168.1.100" type="tel">
             <button class="btn primary" onclick="manualConnect('setup')">Connect</button>
         </div>
     </div>
@@ -1168,7 +1168,7 @@
             <div class="divider">or enter TV IP manually</div>
 
             <label for="manualIpInput">TV IP Address</label>
-            <input type="text" id="manualIpInput" placeholder="192.168.1.100" inputmode="decimal" oninput="this.value=this.value.replace(/,/g,'.')">
+            <input type="text" id="manualIpInput" placeholder="192.168.1.100" type="tel">
 
             <div class="modal-buttons">
                 <button class="btn" onclick="closeTvModal()">Cancel</button>
