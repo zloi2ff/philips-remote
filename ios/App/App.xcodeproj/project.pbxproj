@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		645545C7397E8C129C3966B1 /* ClassicRemoteWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = BF331467CC69624BF23112AE /* ClassicRemoteWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		07FF285283431CF0D4376AF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 63C7D38029ABD3EEE54471BD /* Assets.xcassets */; };
 		2FAD9763203C412B000D30F8 /* config.xml in Resources */ = {isa = PBXBuildFile; fileRef = 2FAD9762203C412B000D30F8 /* config.xml */; };
 		478D83703708C10888874E13 /* ClassicRemoteWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95645BD88E8126690518CE4B /* ClassicRemoteWatchApp.swift */; };
@@ -47,6 +48,17 @@
 
 /* Begin PBXCopyFilesBuildPhase section */
 
+		5EFB66ADDADE2C6835810C1F /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				645545C7397E8C129C3966B1 /* ClassicRemoteWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		AA000007000000000000FF01 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -203,6 +215,7 @@
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
 				AA000007000000000000FF01 /* Embed Foundation Extensions */,
+				5EFB66ADDADE2C6835810C1F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
