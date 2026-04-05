@@ -17,7 +17,7 @@
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
-		645545C7397E8C129C3966B1 /* ClassicRemoteWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = BF331467CC69624BF23112AE /* ClassicRemoteWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+
 		7129D0134357C7FA770F83CA /* TvController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612F5A7162709680C0E9E25E /* TvController.swift */; };
 		7A1EA40E0B58C475425BD6DE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9A2A9010FA88BF71096391B /* ContentView.swift */; };
 		A87F0C80F9C643CB9925ACF7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F979B2C8EDC82BAD9A48202 /* Foundation.framework */; };
@@ -46,17 +46,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		5EFB66ADDADE2C6835810C1F /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				645545C7397E8C129C3966B1 /* ClassicRemoteWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
+
 		AA000007000000000000FF01 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -213,7 +203,6 @@
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
 				AA000007000000000000FF01 /* Embed Foundation Extensions */,
-				5EFB66ADDADE2C6835810C1F /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
@@ -244,7 +233,7 @@
 			name = ClassicRemoteWatch;
 			productName = ClassicRemoteWatch;
 			productReference = BF331467CC69624BF23112AE /* ClassicRemoteWatch.app */;
-			productType = "com.apple.product-type.application.watchapp2";
+			productType = "com.apple.product-type.application";
 		};
 		AA000004000000000000DD01 /* PhilipsWidgetExtension */ = {
 			isa = PBXNativeTarget;
