@@ -164,30 +164,47 @@
 
         .page.active { display: flex; }
 
+        /* Expanded: page itself scrolls, collapsible just expands naturally */
         .page.expanded {
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             justify-content: flex-start;
-            padding-bottom: max(calc(env(safe-area-inset-bottom) + 20px), 40px);
-        }
-        .page.expanded.ad-visible {
-            padding-bottom: max(calc(env(safe-area-inset-bottom) + 90px), 120px) !important;
+            height: 100dvh;
         }
 
         .main-content {
             display: flex;
             flex-direction: column;
             flex: 1;
-            justify-content: space-evenly;
-            gap: 0;
+            justify-content: space-between;
+            min-height: 0;
+            padding-bottom: 8px;
         }
-
-        .main-content > * { margin-bottom: 0; }
 
         .page.expanded .main-content {
-            flex: none;
+            flex: 0 0 auto;
             justify-content: flex-start;
-            gap: 10px;
+            gap: clamp(4px, 1.8vh, 14px);
+            overflow: hidden;
+            padding-bottom: 0;
         }
+
+        .page.expanded .expand-btn {
+            flex-shrink: 0;
+        }
+
+        /* Collapsible: no own scroll, no max-height limit — page handles scroll */
+        .page.expanded .collapsible.expanded {
+            overflow: visible;
+            max-height: none !important;
+        }
+
+        /* Scroll guard still works via page-level scroll listener */
+        .page.expanded.is-scrolling .collapsible .btn { pointer-events: none; }
+
+        /* Padding at page bottom so last button clears AdMob banner */
+        .page.expanded { padding-bottom: max(env(safe-area-inset-bottom), 16px); }
+        .page.expanded.ad-visible { padding-bottom: max(calc(env(safe-area-inset-bottom) + 56px), 72px); }
 
         /* Top header */
         .top-header {
@@ -1097,6 +1114,10 @@
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.90), 0 2px 8px rgba(0,0,0,0.10);
             color: var(--text-primary);
         }
+        [data-theme="light"] .btn.color-red    { background: linear-gradient(180deg, var(--danger) 0%, #c0392b 100%); color: #fff; }
+        [data-theme="light"] .btn.color-green  { background: linear-gradient(180deg, #27ae60 0%, var(--green-dark) 100%); color: #fff; }
+        [data-theme="light"] .btn.color-yellow { background: linear-gradient(180deg, var(--yellow) 0%, #d4ac0d 100%); color: #fff; }
+        [data-theme="light"] .btn.color-blue   { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%); color: #fff; }
 
         [data-theme="light"] .btn.settings-btn {
             background: rgba(255,255,255,0.65);
@@ -1684,15 +1705,6 @@
             <div class="settings-section">
                 <div class="settings-section-label">About</div>
                 <div class="settings-card">
-                    <div class="settings-row">
-                        <div class="icon-badge" style="background:#007aff;">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12.01" y2="8" stroke-width="3"/><line x1="12" y1="12" x2="12" y2="16"/></svg>
-                        </div>
-                        <div class="settings-row-content">
-                            <div class="settings-row-title">Version</div>
-                        </div>
-                        <div class="settings-row-value" id="appVersionLabel">—</div>
-                    </div>
                     <div class="settings-row settings-row-tappable" onclick="openPrivacyPolicy()">
                         <div class="icon-badge" style="background:#636366;">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -1796,7 +1808,7 @@
                 });
                 // Banner height ~50px + safe area inset (home indicator on iPhone X+)
                 const tvPage = document.getElementById('tvPage');
-                tvPage.style.paddingBottom = 'calc(70px + env(safe-area-inset-bottom))';
+                tvPage.style.paddingBottom = 'calc(120px + env(safe-area-inset-bottom))';
                 tvPage.classList.add('ad-visible');
             } catch (e) {
                 console.warn('AdMob:', e);
@@ -3456,7 +3468,7 @@
                         } catch { /* TV unreachable — fall through to Offline */ }
                     }
                 }
-                showStatus('error', 'Offline'); startPolling(); renderExtraButtons(); renderAppLaunchers(); syncButtonToggles();
+                showStatus('error', 'Offline'); startPolling(); renderExtraButtons(); syncButtonToggles(); renderAppLaunchers();
             };
             tryConnect();
         }
@@ -3741,6 +3753,17 @@
             document.querySelector('.expand-btn').setAttribute('aria-expanded', content.classList.contains('expanded'));
             btn.querySelector('span:first-child').textContent =
                 content.classList.contains('expanded') ? 'Less controls' : 'More controls';
+
+            // Scroll guard: disable button taps while page is scrolling
+            if (content.classList.contains('expanded') && !pageEl._scrollListenerAdded) {
+                pageEl._scrollListenerAdded = true;
+                let _scrollTimer;
+                pageEl.addEventListener('scroll', () => {
+                    pageEl.classList.add('is-scrolling');
+                    clearTimeout(_scrollTimer);
+                    _scrollTimer = setTimeout(() => pageEl.classList.remove('is-scrolling'), 150);
+                }, { passive: true });
+            }
         }
 
         // Power confirmation
